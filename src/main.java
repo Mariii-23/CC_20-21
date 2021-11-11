@@ -30,7 +30,13 @@ public class main {
   }
 
   public static void main(String[] args) throws IOException {
-    Create_html_file html = new Create_html_file("ola");
+    Create_html_file html = new Create_html_file("files");
+    html.toHtml();
+
+    html = new Create_html_file("src/module","tmp/1.html");
+    html.toHtml();
+
+    html = new Create_html_file("src","tmp/2.html");
     html.toHtml();
   }
 

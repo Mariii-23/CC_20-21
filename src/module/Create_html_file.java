@@ -4,9 +4,16 @@ import java.io.*;
 
 public class Create_html_file {
   private final File dir;
+  private final String out_name;
 
   public Create_html_file(String name_dir) {
     this.dir = new File(name_dir);
+    this.out_name = "tmp/html.html";
+  }
+
+  public Create_html_file(String name_dir, String out_name) {
+    this.dir = new File(name_dir);
+    this.out_name = out_name;
   }
 
   private String html_title() {
@@ -52,7 +59,7 @@ public class Create_html_file {
     htmlString = htmlString.replace("$Title", title);
     htmlString = htmlString.replace("$Body", body);
 
-    FileWriter myWriter = new FileWriter("tmp/html.html");
+    FileWriter myWriter = new FileWriter(out_name);
     myWriter.write(htmlString);
     myWriter.close();
   }
