@@ -1,4 +1,6 @@
+import module.Communication;
 import module.Create_html_file;
+import module.Type;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +31,7 @@ public class main {
     }
   }
 
-  public static void main(String[] args) throws IOException {
+  public void create_HTML() throws IOException{
     Create_html_file html = new Create_html_file("files");
     html.toHtml();
 
@@ -38,6 +40,11 @@ public class main {
 
     html = new Create_html_file("src","tmp/2.html");
     html.toHtml();
+  }
+
+  public static void main(String[] args) throws IOException {
+    Communication c = new Communication("127.0.0.1", "127.0.0.1");
+    c.connect2();
   }
 
 }
