@@ -1,26 +1,59 @@
 package module.MsgType;
 
 import module.Constantes;
+import module.MSG_interface;
 import module.Msg;
 import module.Type;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-// tem q implementar interfac
-public class HI extends Msg {
+public class HI implements MSG_interface {
+
+  private int serverPort; // nao é preciso
+  private int clientPort;
+
+  InetAddress serverIP; // coisas que nao estao a ser bem usadas
+  InetAddress clientIP; // coisas que nao estao a ser bem usadas
 
   Type type ;
   DatagramPacket packet;
+  DatagramSocket socket;
 
-  public HI(InetAddress address, int serverPort, int clientPort) {
-    super(address,serverPort,clientPort);
+  Byte seq = (byte) 0;
+
+  public HI(InetAddress serverIP, InetAddress clientIp, int serverPort, int clientPort,DatagramSocket socket) {
+    this.serverIP = serverIP;
+    this.clientIP = clientIp;
+    this.serverPort = serverPort;
+    this.clientPort = clientPort;
+    this.socket = socket;
     type = Type.Hi;
+    this.packet = null;
   }
 
-  public HI(DatagramPacket packet,int serverPort,int clientPort) {
-    super(packet.getAddress(), serverPort,clientPort);
+  public HI(DatagramPacket packet,int serverPort,int clientPort,DatagramSocket socket) {
+    this.serverPort = serverPort;
+    this.clientPort = clientPort;
     this.packet = packet;
+    this.socket = socket;
+  }
+
+  @Override
+  public int getServerPort() {
+    return serverPort;
+  }
+
+  @Override
+  public int getClientPort() {
+    return clientPort;
+  }
+
+  @Override
+  public Type getType() {
+    return type;
   }
 
   public void createTailPacket(byte[] buff) {
@@ -41,7 +74,7 @@ public class HI extends Msg {
   public DatagramPacket createPacket(byte sed) {
     byte[] msg = createMsg(sed);
 
-    InetAddress ipaddr = this.address;
+    InetAddress ipaddr = this.serverIP;
 
     return this.packet = new DatagramPacket(msg, msg.length, ipaddr, clientPort);
   }
@@ -56,6 +89,42 @@ public class HI extends Msg {
     return true;
   }
 
+
+  //TODO faltam os acks
+  public void send() throws IOException {
+
+    var serverSocket = new DatagramSocket();
+
+    serverSocket.send(createPacket(seq++));
+
+    System.out.println("mandei");
+
+    byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
+    DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
+    socket.receive(receivedPacket);
+
+    System.out.println(HI.toString(receivedPacket));
+  }
+
+  //TODO faltam os acks
+  public void received() throws IOException {
+
+      var clientSocket = new DatagramSocket();
+      boolean hiReceved = false;
+      while (!hiReceved) {
+        byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
+        DatagramPacket dpac = new DatagramPacket(buff, buff.length);
+        socket.receive(dpac);
+
+        hiReceved = valid(dpac);
+        System.out.println(HI.toString(dpac));
+
+      }
+
+      // mandar a confirmacao que recebeu
+      clientSocket.send(createPacket(seq++));
+  }
+
   public String toString() {
     if (packet!=null) {
       byte[] msg = packet.getData();
@@ -66,8 +135,8 @@ public class HI extends Msg {
     }
   }
 
-  public static String toString(DatagramPacket packet1) {
-    byte[] msg = packet1.getData();
+  public static String toString(DatagramPacket packet) {
+    byte[] msg = packet.getData();
     return  "SEQ: " + msg[0] + "; Type: HI" +  "; MSG:  HI";
   }
 }

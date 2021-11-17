@@ -1,6 +1,5 @@
 import module.Communication;
 import module.Create_html_file;
-import module.Type;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +43,7 @@ public class main {
 
   public static void main(String[] args) throws IOException {
     Communication c = new Communication("127.0.0.1", "127.0.0.1");
-    c.connect2();
+    c.run();
   }
 
 }

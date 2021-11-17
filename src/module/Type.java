@@ -1,5 +1,9 @@
 package module;
 
+import module.MsgType.HI;
+
+import java.net.DatagramPacket;
+
 public enum Type {
   Hi((byte) 0), // 64 ultimo
   //Connection_change((byte) 3), // mudar de porta
