@@ -11,7 +11,6 @@ public interface MSG_interface {
   Type getType();
 
 
-  public void createTailPacket(byte[] buff);
 
   public boolean valid(DatagramPacket packet);
 
@@ -22,10 +21,25 @@ public interface MSG_interface {
   //  return false;
   //}
 
-  default void createHeadPacket(byte sed, byte[] buff, byte type) {
+  default byte getSeq(DatagramPacket packet) {
+    return packet.getData()[0];
+  }
+
+  default void createHeadPacket(byte sed, byte[] buff) {
     buff[0] = sed;
     buff[1] = getType().getBytes();
   }
+
+  public void createTailPacket(byte[] buff);
+
+  default public byte[] createMsg(byte seq){
+    byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
+    createHeadPacket(seq,buff);
+    createTailPacket(buff);
+    return buff;
+  }
+
+  public DatagramPacket createPacket(byte seq);
 
   public void send() throws IOException;
   public void received() throws IOException;

@@ -30,6 +30,7 @@ public class Communication {
       try {
         confirmarConecao();
       } catch (IOException e1) {
+        //TODO APAGAR FRASE
         System.out.println("olha fodace");
       }
     }
@@ -42,7 +43,7 @@ public class Communication {
     this.socket = new DatagramSocket(serverPort);
     System.out.println("cliente");
 
-    HI HiMSG = new HI(serverIP,clientIP,serverPort,clientPort,socket);
+    HI HiMSG = new HI(serverIP,clientIP,serverPort,clientPort,socket,seq);
     HiMSG.send();
   }
 
@@ -54,7 +55,7 @@ public class Communication {
       seq = (byte) 0;
 
     try {
-      HI hiMsg = new HI(serverIP,clientIP,serverPort,clientPort,socket);
+      HI hiMsg = new HI(serverIP,clientIP,serverPort,clientPort,socket,seq);
       hiMsg.received();
     } catch (IOException e) {
       e.printStackTrace();

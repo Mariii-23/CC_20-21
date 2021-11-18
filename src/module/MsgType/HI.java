@@ -22,9 +22,9 @@ public class HI implements MSG_interface {
   DatagramPacket packet;
   DatagramSocket socket;
 
-  Byte seq = (byte) 0;
+  Byte seq;
 
-  public HI(InetAddress serverIP, InetAddress clientIp, int serverPort, int clientPort,DatagramSocket socket) {
+  public HI(InetAddress serverIP, InetAddress clientIp, int serverPort, int clientPort,DatagramSocket socket, byte seq) {
     this.serverIP = serverIP;
     this.clientIP = clientIp;
     this.serverPort = serverPort;
@@ -32,13 +32,15 @@ public class HI implements MSG_interface {
     this.socket = socket;
     type = Type.Hi;
     this.packet = null;
+    this.seq = seq;
   }
 
-  public HI(DatagramPacket packet,int serverPort,int clientPort,DatagramSocket socket) {
+  public HI(DatagramPacket packet,int serverPort,int clientPort,DatagramSocket socket, byte seq) {
     this.serverPort = serverPort;
     this.clientPort = clientPort;
     this.packet = packet;
     this.socket = socket;
+    this.seq = seq;
   }
 
   @Override
@@ -64,19 +66,9 @@ public class HI implements MSG_interface {
       buff[i] = msgByte[i-2];
   }
 
-  public byte[] createMsg(byte sed) {
-    byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
-    createHeadPacket(sed,buff, type.getBytes());
-    createTailPacket(buff);
-    return buff;
-  }
-
-  public DatagramPacket createPacket(byte sed) {
-    byte[] msg = createMsg(sed);
-
-    InetAddress ipaddr = this.serverIP;
-
-    return this.packet = new DatagramPacket(msg, msg.length, ipaddr, clientPort);
+  public DatagramPacket createPacket(byte seq) {
+    byte[] msg = createMsg(seq);
+    return this.packet = new DatagramPacket(msg, msg.length, serverIP, clientPort);
   }
 
   public static boolean validType(DatagramPacket packet){
@@ -91,22 +83,25 @@ public class HI implements MSG_interface {
 
 
   //TODO faltam os acks
+  //TODO faltam por os tempos
   public void send() throws IOException {
 
     var serverSocket = new DatagramSocket();
 
-    serverSocket.send(createPacket(seq++));
-
-    System.out.println("mandei");
+    serverSocket.send(createPacket(seq));
+    seq++;
 
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
     socket.receive(receivedPacket);
-
     System.out.println(HI.toString(receivedPacket));
+
+    ACK ack = new ACK(receivedPacket,serverPort,clientPort,socket,serverIP,clientIP,seq);
+    ack.send();
   }
 
   //TODO faltam os acks
+  //TODO faltam por os tempos
   public void received() throws IOException {
 
       var clientSocket = new DatagramSocket();
@@ -118,11 +113,15 @@ public class HI implements MSG_interface {
 
         hiReceved = valid(dpac);
         System.out.println(HI.toString(dpac));
-
       }
 
       // mandar a confirmacao que recebeu
-      clientSocket.send(createPacket(seq++));
+      var receivedPacket = createPacket(seq);
+      seq++;
+      clientSocket.send(receivedPacket);
+
+      ACK ack = new ACK(receivedPacket,serverPort,clientPort,socket,serverIP,clientIP,seq);
+      ack.received();
   }
 
   public String toString() {

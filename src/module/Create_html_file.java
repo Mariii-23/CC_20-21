@@ -1,7 +1,7 @@
 package module;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+//import org.jetbrains.annotations.Contract;
+//import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 
@@ -19,18 +19,18 @@ public class Create_html_file {
     this.out_name = out_name;
   }
 
-  @Contract(pure = true)
-  private @NotNull String html_title() {
+  //@Contract(pure = true)
+  private /*@NotNull*/ String html_title() {
     return "STATUS";
   }
 
-  private @NotNull String create_line_table(@NotNull File file){
+  private /*@NotNull*/ String create_line_table(/*@NotNull*/ File file){
     var is_file = file.isFile() ?  "FILE" : "DIRECTORY";
     var size = file.getTotalSpace(); // tem q se fazer a conversao i guess
     return "<tr><td>" + create_link_file_or_dir(file) +"</td><td>"+ is_file +"</td><td>"+ size +"</td></tr>\n";
   }
 
-  private @NotNull String create_table(){
+  private /*@NotNull*/ String create_table(){
     var table = new StringBuilder();
     table.append("<table>\n");
     //table.append("   <caption>").append(create_link_file_or_dir(dir)).append("</caption>\n");
@@ -45,13 +45,13 @@ public class Create_html_file {
       return table.toString();
   }
 
-  private @NotNull String create_link_file_or_dir(@NotNull File file) {
+  private /*@NotNull*/ String create_link_file_or_dir(/*@NotNull*/ File file) {
     String url = dir.getAbsolutePath() + "/" + file.getName() ;
     var link = new StringBuilder("<a href=" + "\"" + url + "\">" + file.getName() + "</a>\n");
     return  link.toString();
   }
 
-  private @NotNull String html_body() {
+  private /*@NotNull*/ String html_body() {
     var listDir = dir.listFiles();
 
     var builder = new StringBuilder();
