@@ -1,0 +1,46 @@
+;
+; BIND data file for local loopback interface
+;
+$TTL	604800
+@	IN	SOA	cc.pt. g66pl6.cc.pt. (
+			      2		; Serial
+			 604800		; Refresh
+			  86400		; Retry
+			2419200		; Expire
+			 604800 )	; Negative Cache TTL
+;
+;	name	servers	- ns records
+@	IN	NS	ns.cc.pt.
+@	IN	NS	ns2.cc.pt.
+;@	IN	A	127.0.0.1
+
+; Switch 2
+Servidor1	IN	A	10.2.2.1
+ns		IN	A	10.2.2.1
+
+Servidor2	IN	A	10.2.2.2
+www		IN	CNAME	Servidor2
+@		IN	MX	20	Servidor2 ; numero prioridade
+
+Servidor3	IN	A	10.2.2.3
+pop		IN	CNAME	Servidor3
+imap		IN	CNAME	Servidor3
+@		IN	MX	10	Servidor3
+
+; Switch 3
+Golfinho	IN	A	10.3.3.2
+ns2		IN	A	10.3.3.2
+
+Orca		IN	A	10.3.3.1
+Foca		IN	A	10.3.3.3
+
+;Switch 4
+Grilo		IN	A	10.4.4.1
+Vespa		IN	A	10.4.4.3
+Cigarra		IN	A	10.4.4.2
+
+; Switch 1
+Portatil1	IN	A	10.1.1.1
+g66pl06		IN	CNAME	Portatil1
+Portatil2	IN	A	10.1.1.2
+Portatil3	IN	A	10.1.1.3
