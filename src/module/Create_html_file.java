@@ -71,7 +71,7 @@ public class Create_html_file {
     return builder.toString();
   }
 
-  public void toHtml()  throws IOException {
+  public String createHtml() throws IOException{
     var objReader = new BufferedReader(new FileReader(Constantes.PATHS.TEMPLATE_HTML));
     String strCurrentLine;
     var html_builder = new StringBuilder();
@@ -86,9 +86,12 @@ public class Create_html_file {
     htmlString = htmlString.replace("$Title", title);
     htmlString = htmlString.replace("$Body", body);
     htmlString = htmlString.replace("$Path_Style", Constantes.PATHS.STYLE_CSS);
+    return htmlString.toString();
+  }
 
+  public void toHtml()  throws IOException {
     var myWriter = new FileWriter(out_name);
-    myWriter.write(htmlString);
+    myWriter.write(createHtml());
     myWriter.close();
   }
 }

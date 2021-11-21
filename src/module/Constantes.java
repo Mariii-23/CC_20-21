@@ -21,6 +21,7 @@ public class Constantes {
     /** Tamanho default do Buffer */
     public static int BUFFER_SIZE = 1024;
     /** Port default*/
-    public static int PORT = 80;
+    public static int PORT_UDP = 3000;
+    public static int PORT_HTTP = 8080;
   }
 }

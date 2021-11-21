@@ -1,15 +1,14 @@
 package module.MsgType;
 
 import module.Constantes;
+import module.Exceptions.AckErrorException;
+import module.Exceptions.PackageErrorException;
+import module.Exceptions.TimeOutMsgException;
 import module.MSG_interface;
-import module.Msg;
 import module.Type;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketTimeoutException;
+import java.net.*;
 
 public class HI implements MSG_interface {
 
@@ -18,13 +17,14 @@ public class HI implements MSG_interface {
   //InetAddress serverIP; // coisas que nao estao a ser bem usadas
   InetAddress clientIP; // coisas que nao estao a ser bem usadas
 
-  Type type ;
+  Type type;
   DatagramPacket packet;
   DatagramSocket socket;
+  //DatagramSocket serverSocket;
 
   Byte seq;
 
-  public HI(InetAddress serverIP, InetAddress clientIp, int port,DatagramSocket socket, byte seq) {
+  public HI(InetAddress clientIp, int port,DatagramSocket socket, byte seq) throws SocketException {
     //this.serverIP = serverIP;
     this.clientIP = clientIp;
     this.port = port;
@@ -32,13 +32,16 @@ public class HI implements MSG_interface {
     type = Type.Hi;
     this.packet = null;
     this.seq = seq;
+    //this.serverSocket = new DatagramSocket();
   }
 
-  public HI(DatagramPacket packet,int port,DatagramSocket socket, byte seq) {
+  public HI(DatagramPacket packet,int port,DatagramSocket socket, byte seq) throws SocketException {
     this.port = port;
+    this.clientIP = packet.getAddress();
     this.packet = packet;
     this.socket = socket;
     this.seq = seq;
+    //this.serverSocket = new DatagramSocket();
   }
 
   @Override
@@ -64,68 +67,89 @@ public class HI implements MSG_interface {
     return this.packet = new DatagramPacket(msg, msg.length, clientIP, port);
   }
 
-  public static boolean validType(DatagramPacket packet){
+  public boolean validType(DatagramPacket packet){
     byte[] msg = packet.getData();
     return  msg[1] == Type.Hi.getBytes();
   }
 
-  public boolean valid(DatagramPacket packet) {
-    //TODO
-    return true;
-  }
 
+  public void send() throws IOException, SocketTimeoutException, PackageErrorException {
 
-  public void send() throws IOException {
-
-    var serverSocket = new DatagramSocket();
-
-    serverSocket.send(createPacket(seq));
+    var sendPackage = createPacket(seq);
+    socket.send(sendPackage);
     seq++;
 
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
-    try {
-      socket.receive(receivedPacket);
-      System.out.println(HI.toString(receivedPacket));
+    socket.setSoTimeout(2000); // prob eliminar e por isso no Communication
 
-      // mandar a confirmacao que recebeu
-      receivedPacket = createPacket(seq);
-      seq++;
-      serverSocket.send(receivedPacket);
-    } catch (IOException e){
-      System.out.println("Ainda nao esta ninguem a escuta");
-      received();
+    boolean receveidPackage = false;
+    while (!receveidPackage) {
+      try {
+        socket.receive(receivedPacket);
+      } catch (IOException e) {
+        throw new SocketTimeoutException("Não recebeu nada");
+      }
+
+      if (!validType(receivedPacket)){
+        //TODO chamar controlo de fluxo
+        // mais q 3 vezes e ele manda um package error
+      } else {
+        System.out.println(HI.toString(receivedPacket));
+        ACK ack = new ACK(receivedPacket, port, socket, clientIP, seq);
+        ack.send();
+        receveidPackage = true;
+      }
     }
-
-
-    ACK ack = new ACK(receivedPacket,port,socket,clientIP,seq);
-    ack.received();
   }
 
   public void received() throws IOException {
 
-      var clientSocket = new DatagramSocket();
-
-      clientSocket.send(createPacket(seq));
-      seq++;
-
       boolean hiReceved = false;
+
       byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
-      DatagramPacket receivedPacket = new DatagramPacket(buff, buff.length);
-    while (!hiReceved) {
-        receivedPacket = new DatagramPacket(buff, buff.length);
+      DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
+      while (!hiReceved) {
         try {
           socket.receive(receivedPacket);
-        } catch (SocketTimeoutException e){
+
+          hiReceved = validType(receivedPacket);
+          //TODO se for falso varias vezes temos q fazer algo
+          // FLUXO de congestao
+          if (hiReceved) System.out.println(HI.toString(receivedPacket));
+
+        } catch (SocketTimeoutException e) {
+          // TODO fluxo de congestao
           continue;
         }
-
-        hiReceved = valid(receivedPacket);
-        System.out.println(HI.toString(receivedPacket));
       }
 
-      ACK ack = new ACK(receivedPacket,port,socket,clientIP,seq);
-      ack.send();
+      boolean hiMsgReceveid = false;
+      while (!hiMsgReceveid) {
+        DatagramPacket hiPacket = createPacket(seq);
+        seq++;
+        socket.send(hiPacket);
+
+        ACK ack = new ACK(hiPacket,port,socket,clientIP,seq);
+        boolean ackFail = false;
+        while (!ackFail){
+          try {
+            ack.received();
+            ackFail = true;
+            hiMsgReceveid = true;
+          } catch (TimeOutMsgException e){
+            // TODO controlo de fluxo
+            // vamos diminuindo o tempo de receber cenas
+            continue;
+          } catch (PackageErrorException e1) {
+            // TODO controlo de fluxo
+            // a partir de x pacotes errados, fechamos a conecao
+            continue;
+          } catch (AckErrorException e2) {
+            break;
+          }
+        }
+      }
   }
 
   public String toString() {

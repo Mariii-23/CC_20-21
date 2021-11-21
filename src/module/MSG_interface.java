@@ -1,5 +1,9 @@
 package module;
 
+import module.Exceptions.AckErrorException;
+import module.Exceptions.PackageErrorException;
+import module.Exceptions.TimeOutMsgException;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -11,7 +15,7 @@ public interface MSG_interface {
 
 
 
-  public boolean valid(DatagramPacket packet);
+  public boolean validType(DatagramPacket packet);
 
   public String toString();
 
@@ -40,6 +44,6 @@ public interface MSG_interface {
 
   public DatagramPacket createPacket(byte seq);
 
-  public void send() throws IOException;
-  public void received() throws IOException;
+  public void send() throws IOException, PackageErrorException;
+  public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException;
 }

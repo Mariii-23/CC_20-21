@@ -1,5 +1,6 @@
 import module.Communication;
 import module.Create_html_file;
+import module.Listening;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,10 +42,25 @@ public class main {
     html.toHtml();
   }
 
+
   public static void main(String[] args) throws IOException {
+    String ip = args[0];
+    String path = args[1];
     //TODO confirmar argumentos
-    Communication c = new Communication(args[0], args[1]);
-    c.run();
+
+    Communication c = new Communication(ip, path);
+    //TODO nao esta a dar direito
+    Listening l = new Listening(ip,path);
+
+    Thread[] t = new Thread[2];
+    t[0] = new Thread(c);
+    t[1] = new Thread(l);
+
+    t[0].start();
+    t[1].start();
+
+    //t[0].join();
+    //t[1].join();
   }
 
 }

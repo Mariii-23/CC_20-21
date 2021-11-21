@@ -30,6 +30,14 @@ public enum Type {
     }
   }
 
+  public static byte seeType(byte num) {
+    if (num < (byte) 64)
+      return num;
+    else {
+      return  (byte) (((int) num) - 64);
+    }
+  }
+
   Type(Byte num, boolean flag) {
       this.num = num;
       this.flagLast = flag;

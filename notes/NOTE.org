@@ -18,7 +18,7 @@ public enum Type {
 public enum Status {
     Only,    // Apenas 1
     First,   // Primeiro
-    Middlw,  // Encontra-se entre o primeiro e o ultimo
+    Middle,  // Encontra-se entre o primeiro e o ultimo
     Last,    // Último
 }
 #+end_src

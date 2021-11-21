@@ -1,6 +1,9 @@
 package module.MsgType;
 
 import module.Constantes;
+import module.Exceptions.AckErrorException;
+import module.Exceptions.PackageErrorException;
+import module.Exceptions.TimeOutMsgException;
 import module.MSG_interface;
 import module.Type;
 
@@ -8,6 +11,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 
 public class ACK implements MSG_interface {
 
@@ -29,6 +33,7 @@ public class ACK implements MSG_interface {
     this.socket = socket;
     this.seqConfirmed = getSeq(packet);
     this.seq = seq;
+    this.type.flagOn();
   }
 
 
@@ -49,6 +54,14 @@ public class ACK implements MSG_interface {
   }
 
   @Override
+  public byte[] createMsg(byte seq){
+    byte[] buff = new byte[3];
+    createHeadPacket(seq,buff);
+    createTailPacket(buff);
+    return buff;
+  }
+
+  @Override
   public DatagramPacket createPacket(byte sed) {
     byte[] msg = createMsg(seq);
     return this.packet = new DatagramPacket(msg, msg.length, clientIP, port);
@@ -56,37 +69,48 @@ public class ACK implements MSG_interface {
 
   //TODO
   @Override
-  public boolean valid(DatagramPacket packet) {
-    //byte[]
-    return true;
+  public boolean validType(DatagramPacket packet) {
+    var msg = packet.getData();
+    return msg[1] == Type.ACK.getBytes();
+  }
+
+  private boolean valid(DatagramPacket packet) {
+    var msg = packet.getData();
+    System.out.println(msg[2] + "    conf " + seqConfirmed);
+    return msg[2] == this.seqConfirmed;
   }
 
   @Override
   public void send() throws IOException {
-    var serverSocket = new DatagramSocket();
 
     var packet = createPacket(seq);
     seq++;
-    serverSocket.send(packet);
-    serverSocket.close();
+    //System.out.println( "enviado :   "+ toString(packet));
+    socket.send(packet);
   }
 
   @Override
-  public void received() throws IOException {
-    var clientSocket = new DatagramSocket();
+  public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
 
-    boolean received = false;
-    while (!received){
-      byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
-      DatagramPacket dpac = new DatagramPacket(buff, buff.length);
+    byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
+    DatagramPacket dpac = new DatagramPacket(buff, buff.length);
+    try {
       socket.receive(dpac);
-      received = valid(dpac);
-      //TODO verifcar se é o sed que ele quer
-      System.out.println(ACK.toString(dpac));
-      System.out.println(seqConfirmed); //apagar
+    } catch (SocketTimeoutException e){
+      throw new TimeOutMsgException("Tempo de resposta ultrapassado");
     }
 
-    clientSocket.close();
+    if (!validType(dpac)){
+      System.out.println("FOdace tipo");
+      throw new PackageErrorException("Mensagem recebida nao é do tipo ack");
+    }
+
+    if (!valid(dpac)){
+      System.out.println("packet mal wtf");
+      throw new AckErrorException("Seq a confirmar não é o correspondido", packet.getData()[2]);
+    }
+
+    System.out.println(ACK.toString(dpac));
   }
 
   public String toString() {
