@@ -42,7 +42,8 @@ public class main {
   }
 
   public static void main(String[] args) throws IOException {
-    Communication c = new Communication("127.0.0.1", "127.0.0.1");
+    //TODO confirmar argumentos
+    Communication c = new Communication(args[0], args[1]);
     c.run();
   }
 
