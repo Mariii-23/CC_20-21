@@ -11,11 +11,9 @@ import java.net.InetAddress;
 
 public class ACK implements MSG_interface {
 
-  private int serverPort; // nao é preciso
-  private int clientPort;
+  private int port;
 
-  InetAddress serverIP; // coisas que nao estao a ser bem usadas
-  InetAddress clientIP; // coisas que nao estao a ser bem usadas
+  InetAddress clientIP;
 
   Type type = Type.ACK;
   DatagramPacket packet; //
@@ -24,25 +22,19 @@ public class ACK implements MSG_interface {
   Byte seq = (byte) 0;
   Byte seqConfirmed; // seq a confirmar
 
-  public ACK(DatagramPacket packet,int serverPort,int clientPort,DatagramSocket socket, InetAddress serverIP, InetAddress clientIP, byte seq) {
-    this.serverPort = serverPort;
-    this.clientPort = clientPort;
+  public ACK(DatagramPacket packet,int port,DatagramSocket socket, InetAddress clientIP, byte seq) {
+    this.port = port;
     this.packet = packet;
     this.clientIP = clientIP;
-    this.serverIP = serverIP;
     this.socket = socket;
     this.seqConfirmed = getSeq(packet);
     this.seq = seq;
   }
 
-  @Override
-  public int getServerPort() {
-    return serverPort;
-  }
 
   @Override
-  public int getClientPort() {
-    return clientPort;
+  public int getPort() {
+    return port;
   }
 
   @Override
@@ -59,7 +51,7 @@ public class ACK implements MSG_interface {
   @Override
   public DatagramPacket createPacket(byte sed) {
     byte[] msg = createMsg(seq);
-    return this.packet = new DatagramPacket(msg, msg.length, serverIP, clientPort);
+    return this.packet = new DatagramPacket(msg, msg.length, clientIP, port);
   }
 
   //TODO

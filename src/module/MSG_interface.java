@@ -6,8 +6,7 @@ import java.net.InetAddress;
 
 public interface MSG_interface {
   //InetAddress getAddress(); // endereco a enviar
-  int getServerPort(); // nao é preciso
-  int getClientPort();
+  int getPort();
   Type getType();
 
 
