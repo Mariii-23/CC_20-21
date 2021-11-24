@@ -2,11 +2,9 @@ package module;
 
 import com.sun.net.httpserver.HttpServer;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.*;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -28,38 +26,52 @@ public class Listening implements Runnable {
   @Override
   public void run() {
     try {
-      //server = HttpServer.create(new InetSocketAddress("localhost",port),0);
-      //server = HttpServer.create(new InetSocketAddress(serverIP,port),0);
 
-      //ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
-      //server.createContext("/"+serverIP,new HttpHandler(pathDir) );
-      //////server.setExecutor(null);
-      //server.setExecutor(threadPoolExecutor);
-      //server.start();
+      //TODO
+      // 1.  adicionar pagina de erros
+      // 2.  adicionar struct que lida com pedidos ///Usar o Handle
+      // 3.  adicionar threads
 
       // nao pode ser assim, pois assim so o locahost é q recebe as cenas
       ServerSocket serverSocket = new ServerSocket(port);
       while (true) {
         Socket client = serverSocket.accept();
 
-        InputStreamReader isr
-            =  new InputStreamReader(client.getInputStream());
-        BufferedReader reader = new BufferedReader(isr);
-        String line = reader.readLine();
+        PrintWriter out_ = new PrintWriter(client.getOutputStream());
+        BufferedReader in_ = new BufferedReader(new InputStreamReader(client.getInputStream()));
+
+        //InputStreamReader isr
+        //    =  new InputStreamReader(client.getInputStream());
+        //BufferedReader reader = new BufferedReader(isr);
+        //String line = reader.readLine();
+        String line = in_.readLine();
         while (!line.isEmpty()) {
+          //if (i==0)
           System.out.println(line);
-          line = reader.readLine();
+          line = in_.readLine();
         }
 
         String string =  new Create_html_file(this.pathDir).createHtml();
 
-        String httpResponse = "HTTP/1.1 200 OK\r\nContent-Length: "+string.length()+"\r\n\r\n" + string;
-        OutputStream out = client.getOutputStream();
-        var httpResponseBytes =   httpResponse.getBytes("UTF-8");
+        // por tudo numa linha e por /r
+        out_.println("HTTP/1.1 200 OK");
+        out_.println("Server: "+ serverIP);
+        out_.println("Date: "+ new Date());
+        out_.println("Content-type: text/html");
+        out_.println("Content-length: " + string.length());
+        out_.println("Connection: Closed" );
+        out_.println();
+        out_.println(string);
+        out_.flush();
+        out_.close();
 
-        out.write(httpResponseBytes);
-        out.flush();
-        out.close();
+        //String httpResponse = "HTTP/1.1 200 OK\r\nContent-Length: "+string.length()+"\r\n\r\n" + string;
+        //OutputStream out = client.getOutputStream();
+        //var httpResponseBytes =   httpResponse.getBytes("UTF-8");
+
+        //out.write(httpResponseBytes);
+        //out.flush();
+        //out.close();
         client.close();
       }
 
