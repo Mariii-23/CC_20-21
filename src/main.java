@@ -31,8 +31,12 @@ public class main {
     t[0].start();
     t[1].start();
 
-    //t[0].join();
-    //t[1].join();
+    try {
+      t[0].join();
+      t[1].join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
 }
