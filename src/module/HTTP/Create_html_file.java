@@ -1,7 +1,9 @@
-package module;
+package module.HTTP;
 
 //import org.jetbrains.annotations.Contract;
 //import org.jetbrains.annotations.NotNull;
+
+import module.Constantes;
 
 import java.io.*;
 

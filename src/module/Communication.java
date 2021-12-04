@@ -9,18 +9,19 @@ import java.net.*;
 
 public class Communication implements Runnable{
 
-  DatagramSocket socket;       /// nosso socket no qual enviamos coisas
-  //DatagramSocket clientSocket; /// neste socket ouvimos coisas do outro sistema
+  private Information status; // server para verificar se o programa termina
 
-  String pathDir;
-  int port;
+  private DatagramSocket socket;
 
-  //InetAddress serverIP; // coisas que nao estao a ser bem usadas
-  InetAddress clientIP; // coisas que nao estao a ser bem usadas
+  private String pathDir;
+  private int port;
 
-  byte seq;
+  private InetAddress clientIP; // coisas que nao estao a ser bem usadas
 
-  public Communication(String clientIP, String pathDir) throws UnknownHostException {
+  private byte seq;
+
+  public Communication(Information status,String clientIP, String pathDir) throws UnknownHostException {
+    this.status = status;
     //this.serverIP = InetAddress.getByName(clientIP);
     this.clientIP = InetAddress.getByName(clientIP);
     this.port = Constantes.CONFIG.PORT_UDP;
@@ -28,7 +29,6 @@ public class Communication implements Runnable{
   }
 
   private void connect() {
-
     try {
         iniciarConecao();
         // foi o q mandou o hi
@@ -80,6 +80,7 @@ public class Communication implements Runnable{
   @Override
   public void run() {
     connect();
+    status.endProgram();
   }
 
   public void close() {

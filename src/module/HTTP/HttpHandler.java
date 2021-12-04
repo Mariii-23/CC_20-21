@@ -1,4 +1,6 @@
-package module;
+package module.HTTP;
+
+import module.Constantes;
 
 import java.io.*;
 import java.net.Socket;
@@ -24,7 +26,6 @@ public class HttpHandler implements  AutoCloseable , Runnable{
     File file = new File( Constantes.PATHS.PARENT_PATH , fileName);
     StringBuilder s = new StringBuilder();
     Scanner scanner = new Scanner(file);
-    String string;
     while( scanner.hasNextLine())
       s.append(scanner.nextLine()).append("\n");
     return s.toString();

@@ -1,11 +1,11 @@
 import module.Communication;
-import module.Create_html_file;
+import module.HTTP.Create_html_file;
+import module.Information;
 import module.Listening;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.Date;
 
@@ -56,9 +56,11 @@ public class main {
 
     // senoa for... terminar programa e printar o erro
 
-    Communication c = new Communication(ip, path);
+    Information status = new Information();
+
+    Communication c = new Communication(status ,ip, path);
     //TODO nao esta a dar direito
-    Listening l = new Listening("170.0.0.1",path);
+    Listening l = new Listening(status,"170.0.0.1",path);
 
     Thread[] t = new Thread[2];
     t[0] = new Thread(c);
