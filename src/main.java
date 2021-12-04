@@ -22,7 +22,6 @@ public class main {
     Information status = new Information();
 
     Communication c = new Communication(status ,ip, path);
-    //TODO nao esta a dar direito
     Listening l = new Listening(status, path);
 
     Thread[] t = new Thread[2];
