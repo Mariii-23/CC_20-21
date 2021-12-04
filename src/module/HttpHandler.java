@@ -3,6 +3,7 @@ package module;
 import java.io.*;
 import java.net.Socket;
 import java.util.Date;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 
 public class HttpHandler implements  AutoCloseable , Runnable{
@@ -18,6 +19,20 @@ public class HttpHandler implements  AutoCloseable , Runnable{
     in = new BufferedReader(new InputStreamReader(s.getInputStream()));
   }
 
+  // passar para string um dado ficheiro
+  private String readFile (String fileName) throws FileNotFoundException {
+    File file = new File( Constantes.PATHS.PARENT_PATH , fileName);
+    StringBuilder s = new StringBuilder();
+    Scanner scanner = new Scanner(file);
+    String string;
+    while( scanner.hasNextLine())
+      s.append(scanner.nextLine()).append("\n");
+    return s.toString();
+  }
+
+  /// Pedidos GET
+
+  // Responder ao pedido do status GET /
   private void handleStatus() throws IOException{
     String string =  new Create_html_file(pathDir).createHtml();
     out.println("HTTP/1.1 200 OK");
@@ -31,55 +46,58 @@ public class HttpHandler implements  AutoCloseable , Runnable{
     out.flush();
   }
 
+  // Respoonder ao ficheiro de pagina not found
   private void handlePageNotFound() throws IOException {
-    String string =  new Create_html_file("PageNotFound.html").createHtml("Page Not Found", "Page not found");
-
-    out.println("HTTP/1.1 200 OK");
-    out.println("Server: " + Constantes.CONFIG.SERVER_NAME);
-    out.println("Date: " + new Date());
-    out.println("Content-type: text/html");
-    out.println("Content-length: " + string.length());
-    out.println(); // blank line between headers and content, very important !
-    out.println(string);
-    out.flush(); // flush character output stream buffer
-
+    var string = readFile(Constantes.PATHS.PAGE_NOT_FOUND_HTML);
     out.println("HTTP/1.1 404 File Not Found");
     out.println("Server: " + Constantes.CONFIG.SERVER_NAME);
     out.println("Date: " + new Date());
     out.println("Content-type: text/html");
     out.println("Content-length: " + string.length());
-    out.println(); // blank line between headers and content, very important !
+    out.println();
     out.println(string);
-    out.flush(); // flush character output stream buffer
-
+    out.flush();
   }
 
+  /// PEDIDOS Nao suportados
+
+  // Responder ao pedido nao suportado
+  private void handleNotSupported() throws  IOException {
+    var string = readFile(Constantes.PATHS.NOT_SUPPORTED);
+    out.println("HTTP/1.1 501 Not Implemented");
+    out.println("Server: ");
+    out.println("Date: " + new Date());
+    out.println("Content-type: text/html");
+    out.println("Content-length: " + string.length());
+    out.println();
+    out.println(string);
+    out.flush();
+  }
+
+  /// HANDLERSSS
+
+  // Handler do pedido do get
   private void handleGet(String fileRequest) throws IOException {
     switch (fileRequest) {
       case "/" : handleStatus();
+      //case "/ola" : handleNotSupported();
       default : handlePageNotFound();
     }
   }
 
-  private void handleNotSupported() throws  IOException {
-    var name = "not_supported.html";
-  }
-
+  // Handler dos pedidos
   private void handleResponse(String method, String fileRequest) throws IOException {
     switch (method) {
       case "GET" : handleGet(fileRequest);
-      default : handlePageNotFound(); // TODO METER UMA PAGINA A DIZER Q O METODO NAO EXISTE
+      default : handleNotSupported();
     }
   }
 
-  public void handle(Socket s) {
-
+  public void handle() {
     try {
       String input = in.readLine();
-      // we parse the request with a string tokenizer
       StringTokenizer parse = new StringTokenizer(input);
       String method = parse.nextToken().toUpperCase(); // we get the HTTP method of the client
-      // we get file requested
       var fileRequested = parse.nextToken().toLowerCase();
 
       handleResponse(method, fileRequested);
@@ -91,7 +109,7 @@ public class HttpHandler implements  AutoCloseable , Runnable{
 
   @Override
   public void run() {
-    handle(s);
+    handle();
   }
 
   @Override

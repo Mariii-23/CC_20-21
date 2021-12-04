@@ -9,8 +9,12 @@ public class Constantes {
    */
   public static class PATHS {
     /** Default path para o template HTML */
-    //public static String TEMPLATE_HTML = "files/template.html";
-    public static String TEMPLATE_HTML = "../files/template.html";
+    public static String PARENT_PATH = "files";
+    //public static String PARENT_PATH = "../files";
+
+    public static String TEMPLATE_HTML = "template.html";
+    public static String PAGE_NOT_FOUND_HTML = "page_not_found.html";
+    public static String NOT_SUPPORTED = "not_supported.html";
     /** Default path para o CSS que será usado no HTML */
     public static String STYLE_CSS = "style.css";
   }

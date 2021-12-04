@@ -74,7 +74,7 @@ public class Create_html_file {
   public String createHtml() throws IOException{
     BufferedReader objReader;
     try {
-      objReader = new BufferedReader(new FileReader(Constantes.PATHS.TEMPLATE_HTML));
+      objReader = new BufferedReader(new FileReader(Constantes.PATHS.PARENT_PATH+"/"+Constantes.PATHS.TEMPLATE_HTML));
     } catch (IOException e) {
       System.out.println(e.toString());
       return "";
@@ -99,7 +99,7 @@ public class Create_html_file {
   public String createHtml(String title, String body) throws IOException {
     BufferedReader objReader;
     try {
-      objReader = new BufferedReader(new FileReader(Constantes.PATHS.TEMPLATE_HTML));
+      objReader = new BufferedReader(new FileReader(Constantes.PATHS.PARENT_PATH+"/"+Constantes.PATHS.TEMPLATE_HTML));
     } catch (IOException e) {
       System.out.println(e.toString());
       return "";
