@@ -23,7 +23,7 @@ public class main {
 
     Communication c = new Communication(status ,ip, path);
     //TODO nao esta a dar direito
-    Listening l = new Listening(status,"170.0.0.1",path);
+    Listening l = new Listening(status, path);
 
     Thread[] t = new Thread[2];
     t[0] = new Thread(c);

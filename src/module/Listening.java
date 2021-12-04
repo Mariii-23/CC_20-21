@@ -12,13 +12,8 @@ public class Listening implements Runnable {
   private String pathDir;
   private int port;
 
-  private InetAddress serverIP;
-  private HttpServer server;
-
-  public Listening(Information status,String clientIP, String pathDir) throws IOException {
-    //this.serverIP = InetAddress.getLocalHost();
+  public Listening(Information status, String pathDir) throws IOException {
     this.status = status;
-    this.serverIP = InetAddress.getByName(clientIP);
     this.port = Constantes.CONFIG.PORT_HTTP;
     this.pathDir = pathDir;
   }
