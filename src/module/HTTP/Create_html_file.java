@@ -28,7 +28,9 @@ public class Create_html_file {
 
   private /*@NotNull*/ String create_line_table(/*@NotNull*/ File file){
     var is_file = file.isFile() ?  "FILE" : "DIRECTORY";
-    var size = file.getTotalSpace(); // tem q se fazer a conversao i guess
+    //var size = (double) file.length() / (1024 * 1024) ; //"mb"
+    var size = file.length();
+    //var size = file.getTotalSpace(); // tem q se fazer a conversao i guess
     return "<tr><td>" + create_link_file_or_dir(file) +"</td><td>"+ is_file +"</td><td>"+ size +"</td></tr>\n";
   }
 
