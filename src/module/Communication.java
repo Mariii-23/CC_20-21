@@ -2,6 +2,7 @@ package module;
 
 import module.Exceptions.PackageErrorException;
 import module.MsgType.HI;
+import java.io.File;
 
 import java.io.IOException;
 import java.net.*;
@@ -75,6 +76,7 @@ public class Communication implements Runnable{
     }
   }
 
+
   @Override
   public void run() {
     connect();
@@ -85,4 +87,6 @@ public class Communication implements Runnable{
         socket.close();
       }
   }
+
+
 }

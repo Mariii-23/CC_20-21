@@ -23,16 +23,19 @@ public class ACK implements MSG_interface {
   DatagramPacket packet; //
   DatagramSocket socket;
 
+  Byte seqPedido;
   Byte seq = (byte) 0;
   Byte seqConfirmed; // seq a confirmar
+  Byte seqSegConfirmed; // seq a confirmar
 
   public ACK(DatagramPacket packet,int port,DatagramSocket socket, InetAddress clientIP, byte seq) {
     this.port = port;
     this.packet = packet;
     this.clientIP = clientIP;
     this.socket = socket;
-    this.seqConfirmed = getSeq(packet);
-    this.seq = seq;
+    this.seqConfirmed = getSeq(packet); //pedido
+    this.seqSegConfirmed = getSeqSegmento(packet); //segmentpo
+    this.seqPedido = seq;
     this.type.flagOn();
   }
 
@@ -50,20 +53,21 @@ public class ACK implements MSG_interface {
   //TODO Acrescentar o ultimo seq
   @Override
   public void createTailPacket(byte[] buff) {
-    buff[2]  = seqConfirmed;
+    buff[3]  = seqConfirmed;
+    buff[4]  = seqSegConfirmed;
   }
 
-  @Override
-  public byte[] createMsg(byte seq){
-    byte[] buff = new byte[3];
-    createHeadPacket(seq,buff);
-    createTailPacket(buff);
-    return buff;
-  }
+  //@Override
+  //public byte[] createMsg(byte seq, byte seqSeg){
+  //  byte[] buff = new byte[5];
+  //  createHeadPacket(seqPedido,seq, buff);
+  //  createTailPacket(buff);
+  //  return buff;
+  //}
 
   @Override
-  public DatagramPacket createPacket(byte sed) {
-    byte[] msg = createMsg(seq);
+  public DatagramPacket createPacket(byte sed, byte seqSeg) {
+    byte[] msg = createMsg(seqPedido, seq);
     return this.packet = new DatagramPacket(msg, msg.length, clientIP, port);
   }
 
@@ -71,19 +75,20 @@ public class ACK implements MSG_interface {
   @Override
   public boolean validType(DatagramPacket packet) {
     var msg = packet.getData();
-    return msg[1] == Type.ACK.getBytes();
+    return msg[0] == Type.ACK.getBytes();
   }
 
   private boolean valid(DatagramPacket packet) {
     var msg = packet.getData();
-    System.out.println(msg[2] + "    conf " + seqConfirmed);
-    return msg[2] == this.seqConfirmed;
+    //System.out.println(msg[4] + "    seq segmento " + seqSegConfirmed);
+    //System.out.println(msg[3] + "    pedido " + seqConfirmed);
+    return msg[4] == this.seqSegConfirmed && msg[3] == this.seqConfirmed;
   }
 
   @Override
   public void send() throws IOException {
 
-    var packet = createPacket(seq);
+    var packet = createPacket(seqPedido,seq);
     seq++;
     //System.out.println( "enviado :   "+ toString(packet));
     socket.send(packet);
@@ -110,13 +115,13 @@ public class ACK implements MSG_interface {
       throw new AckErrorException("Seq a confirmar não é o correspondido", packet.getData()[2]);
     }
 
-    System.out.println(ACK.toString(dpac));
+    System.out.println("RECEBI: "+ ACK.toString(dpac));
   }
 
   public String toString() {
     if (packet!=null) {
       byte[] msg = packet.getData();
-      return  "SEQ: " + msg[0] + "; Type: ACK" +  "; MSG: " + msg[2];
+      return  "SEQ: " + msg[1] + " SEG: " +msg[2] + "; Type: ACK" +  "; MSG: " + msg[2];
     }
     else {
       return "Packet Invalid";
@@ -125,6 +130,6 @@ public class ACK implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return  "SEQ: " + msg[0] + "; Type: ACK" +  "; MSG: " + msg[2];
+    return  "SEQ: " + msg[1] + " SEG: " +msg[2] + "; Type: ACK" +  "; MSG: " + msg[2];
   }
 }

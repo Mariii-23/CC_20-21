@@ -5,6 +5,7 @@ import module.Listening;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.Date;
 
@@ -48,9 +49,16 @@ public class main {
     String path = args[1];
     //TODO confirmar argumentos
 
+    // verificar se o argumento 0 é um ip valido , verificar o formato
+    // InetAddress.getByName( ... ); -> basta ver se isto nao lanca excecao
+
+    // verificar se o argumnto 1 é uma pasta valida... isto é se o path é valido e exite
+
+    // senoa for... terminar programa e printar o erro
+
     Communication c = new Communication(ip, path);
     //TODO nao esta a dar direito
-    Listening l = new Listening(ip,path);
+    Listening l = new Listening("170.0.0.1",path);
 
     Thread[] t = new Thread[2];
     t[0] = new Thread(c);

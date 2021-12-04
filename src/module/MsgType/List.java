@@ -70,7 +70,7 @@ public class List implements MSG_interface {
   }
 
   @Override
-  public DatagramPacket createPacket(byte seq) {
+  public DatagramPacket createPacket(byte seq, byte seqSeg) {
     //TODO
     return null;
   }

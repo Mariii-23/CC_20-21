@@ -22,7 +22,8 @@ public class HI implements MSG_interface {
   DatagramSocket socket;
   //DatagramSocket serverSocket;
 
-  Byte seq;
+  Byte seq = (byte) 0;
+  Byte seqPedido;
 
   public HI(InetAddress clientIp, int port,DatagramSocket socket, byte seq) throws SocketException {
     //this.serverIP = serverIP;
@@ -31,7 +32,7 @@ public class HI implements MSG_interface {
     this.socket = socket;
     type = Type.Hi;
     this.packet = null;
-    this.seq = seq;
+    this.seqPedido = seq;
     //this.serverSocket = new DatagramSocket();
   }
 
@@ -40,7 +41,7 @@ public class HI implements MSG_interface {
     this.clientIP = packet.getAddress();
     this.packet = packet;
     this.socket = socket;
-    this.seq = seq;
+    this.seqPedido = seq;
     //this.serverSocket = new DatagramSocket();
   }
 
@@ -58,24 +59,25 @@ public class HI implements MSG_interface {
     String msg = "HI";
     byte[] msgByte = msg.getBytes();
 
-    for(int i= 2; i<msgByte.length;i++)
+    for(int i= Constantes.CONFIG.HEAD_SIZE-1; i<msgByte.length;i++)
       buff[i] = msgByte[i-2];
   }
 
-  public DatagramPacket createPacket(byte seq) {
-    byte[] msg = createMsg(seq);
+  @Override
+  public DatagramPacket createPacket(byte seq,byte seqSeg) {
+    byte[] msg = createMsg(seq, seqSeg);
     return this.packet = new DatagramPacket(msg, msg.length, clientIP, port);
   }
 
   public boolean validType(DatagramPacket packet){
     byte[] msg = packet.getData();
-    return  msg[1] == Type.Hi.getBytes();
+    return  msg[0] == Type.Hi.getBytes();
   }
 
 
   public void send() throws IOException, SocketTimeoutException, PackageErrorException {
 
-    var sendPackage = createPacket(seq);
+    var sendPackage = createPacket(seqPedido,seq);
     socket.send(sendPackage);
     seq++;
 
@@ -95,7 +97,7 @@ public class HI implements MSG_interface {
         //TODO chamar controlo de fluxo
         // mais q 3 vezes e ele manda um package error
       } else {
-        System.out.println(HI.toString(receivedPacket));
+        System.out.println("RECEBI: " + HI.toString(receivedPacket));
         ACK ack = new ACK(receivedPacket, port, socket, clientIP, seq);
         ack.send();
         receveidPackage = true;
@@ -116,7 +118,7 @@ public class HI implements MSG_interface {
           hiReceved = validType(receivedPacket);
           //TODO se for falso varias vezes temos q fazer algo
           // FLUXO de congestao
-          if (hiReceved) System.out.println(HI.toString(receivedPacket));
+          if (hiReceved) System.out.println("RECEBI: " + HI.toString(receivedPacket));
 
         } catch (SocketTimeoutException e) {
           // TODO fluxo de congestao
@@ -126,7 +128,7 @@ public class HI implements MSG_interface {
 
       boolean hiMsgReceveid = false;
       while (!hiMsgReceveid) {
-        DatagramPacket hiPacket = createPacket(seq);
+        DatagramPacket hiPacket = createPacket(seqPedido,seq);
         seq++;
         socket.send(hiPacket);
 
@@ -155,7 +157,7 @@ public class HI implements MSG_interface {
   public String toString() {
     if (packet!=null) {
       byte[] msg = packet.getData();
-      return  "SEQ: " + msg[0] + "; Type: HI" +  "; MSG:  HI";
+      return  "SEQ: " + msg[1] + " SEG: " +msg[2]  + "; Type: HI" +  "; MSG:  HI";
     }
     else {
       return "Packet Invalid";
@@ -164,6 +166,6 @@ public class HI implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return  "SEQ: " + msg[0] + "; Type: HI" +  "; MSG:  HI";
+    return  "SEQ: " + msg[1] + " SEG: " +msg[2]  + "; Type: HI" +  "; MSG:  HI";
   }
 }

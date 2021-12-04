@@ -72,7 +72,14 @@ public class Create_html_file {
   }
 
   public String createHtml() throws IOException{
-    var objReader = new BufferedReader(new FileReader(Constantes.PATHS.TEMPLATE_HTML));
+    BufferedReader objReader;
+    try {
+      objReader = new BufferedReader(new FileReader(Constantes.PATHS.TEMPLATE_HTML));
+    } catch (IOException e) {
+      System.out.println(e.toString());
+      return "";
+    }
+
     String strCurrentLine;
     var html_builder = new StringBuilder();
     while ((strCurrentLine = objReader.readLine()) != null) {
@@ -86,6 +93,28 @@ public class Create_html_file {
     htmlString = htmlString.replace("$Title", title);
     htmlString = htmlString.replace("$Body", body);
     htmlString = htmlString.replace("$Path_Style", Constantes.PATHS.STYLE_CSS);
+    return htmlString.toString();
+  }
+
+  public String createHtml(String title, String body) throws IOException {
+    BufferedReader objReader;
+    try {
+      objReader = new BufferedReader(new FileReader(Constantes.PATHS.TEMPLATE_HTML));
+    } catch (IOException e) {
+      System.out.println(e.toString());
+      return "";
+    }
+
+    String strCurrentLine;
+    var html_builder = new StringBuilder();
+    while ((strCurrentLine = objReader.readLine()) != null) {
+      html_builder.append(strCurrentLine) ;
+    }
+    objReader.close();
+
+    var htmlString = html_builder.toString();
+    htmlString = htmlString.replace("$Title", title);
+    htmlString = htmlString.replace("$Body", body);
     return htmlString.toString();
   }
 

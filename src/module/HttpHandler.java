@@ -1,13 +1,11 @@
 package module;
 
-import com.sun.net.httpserver.HttpExchange;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.Date;
 import java.util.StringTokenizer;
 
-public class HttpHandler implements  AutoCloseable{
+public class HttpHandler implements  AutoCloseable , Runnable{
   private final String pathDir;
   private final PrintWriter out;
   private final BufferedReader in;
@@ -23,7 +21,7 @@ public class HttpHandler implements  AutoCloseable{
   private void handleStatus() throws IOException{
     String string =  new Create_html_file(pathDir).createHtml();
     out.println("HTTP/1.1 200 OK");
-    out.println("Server: ola");
+    out.println("Server: " + Constantes.CONFIG.SERVER_NAME);
     out.println("Date: "+ new Date());
     out.println("Content-type: text/html");
     out.println("Content-length: " + string.length());
@@ -31,50 +29,69 @@ public class HttpHandler implements  AutoCloseable{
     out.println();
     out.println(string);
     out.flush();
-    out.close();
   }
 
-  private void handleNF() throws IOException {
-    String string =  new Create_html_file("/home/mari/books").createHtml();
-    out.println("HTTP/1.1 400 OK");
-    out.println("Server: ola");
-    out.println("Date: "+ new Date());
+  private void handlePageNotFound() throws IOException {
+    String string =  new Create_html_file("PageNotFound.html").createHtml("Page Not Found", "Page not found");
+
+    out.println("HTTP/1.1 200 OK");
+    out.println("Server: " + Constantes.CONFIG.SERVER_NAME);
+    out.println("Date: " + new Date());
     out.println("Content-type: text/html");
     out.println("Content-length: " + string.length());
-    out.println("Connection: Closed" );
-    out.println();
+    out.println(); // blank line between headers and content, very important !
     out.println(string);
-    out.flush();
-    out.close();
+    out.flush(); // flush character output stream buffer
+
+    out.println("HTTP/1.1 404 File Not Found");
+    out.println("Server: " + Constantes.CONFIG.SERVER_NAME);
+    out.println("Date: " + new Date());
+    out.println("Content-type: text/html");
+    out.println("Content-length: " + string.length());
+    out.println(); // blank line between headers and content, very important !
+    out.println(string);
+    out.flush(); // flush character output stream buffer
+
   }
 
-  private void handleGet(String path) {
-
-  }
-
-  //private void handleResponse(String method, String path) throws IOException {
-  //  switch (method){
-  //    case "GET"  => handleGet(path),
-  //
-  //  }
-  //}
-
-  public void handle(Socket s) throws IOException {
-    String line = in.readLine();
-    int i=0;
-    StringTokenizer parse = null;
-    String method = null;
-    String fileRequested = null;
-    while (!line.isEmpty()) {
-        if (i==0) {
-          parse = new StringTokenizer(line);
-          method = parse.nextToken().toUpperCase(); // we get the HTTP method of the client
-          // we get file requested
-          fileRequested = parse.nextToken().toLowerCase();
-        }
-        System.out.println(line);
-        line = in.readLine();
+  private void handleGet(String fileRequest) throws IOException {
+    switch (fileRequest) {
+      case "/" : handleStatus();
+      default : handlePageNotFound();
     }
+  }
+
+  private void handleNotSupported() throws  IOException {
+    var name = "not_supported.html";
+  }
+
+  private void handleResponse(String method, String fileRequest) throws IOException {
+    switch (method) {
+      case "GET" : handleGet(fileRequest);
+      default : handlePageNotFound(); // TODO METER UMA PAGINA A DIZER Q O METODO NAO EXISTE
+    }
+  }
+
+  public void handle(Socket s) {
+
+    try {
+      String input = in.readLine();
+      // we parse the request with a string tokenizer
+      StringTokenizer parse = new StringTokenizer(input);
+      String method = parse.nextToken().toUpperCase(); // we get the HTTP method of the client
+      // we get file requested
+      var fileRequested = parse.nextToken().toLowerCase();
+
+      handleResponse(method, fileRequested);
+    } catch (IOException e) {
+      //TODO MUDar
+      System.out.println("ERROR: " + e);
+    }
+  }
+
+  @Override
+  public void run() {
+    handle(s);
   }
 
   @Override

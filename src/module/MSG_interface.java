@@ -25,24 +25,29 @@ public interface MSG_interface {
   //}
 
   default byte getSeq(DatagramPacket packet) {
-    return packet.getData()[0];
+    return packet.getData()[1];
   }
 
-  default void createHeadPacket(byte sed, byte[] buff) {
-    buff[0] = sed;
-    buff[1] = getType().getBytes();
+  default byte getSeqSegmento(DatagramPacket packet) {
+    return packet.getData()[2];
+  }
+
+  default void createHeadPacket(byte sed, byte sedSeg, byte[] buff) {
+    buff[0] = getType().getBytes();
+    buff[1] = sed;
+    buff[2] = sedSeg;
   }
 
   public void createTailPacket(byte[] buff);
 
-  default public byte[] createMsg(byte seq){
+  default public byte[] createMsg(byte seq, byte seqSeg){
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
-    createHeadPacket(seq,buff);
+    createHeadPacket(seq, seqSeg, buff);
     createTailPacket(buff);
     return buff;
   }
 
-  public DatagramPacket createPacket(byte seq);
+  public DatagramPacket createPacket(byte seq, byte seqSeg);
 
   public void send() throws IOException, PackageErrorException;
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException;

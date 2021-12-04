@@ -1,5 +1,6 @@
 .idea/*
 out/*
+src/module/out/*
 CC_TP2.iml
 
 tmp/*
