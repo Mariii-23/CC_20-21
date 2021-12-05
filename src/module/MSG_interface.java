@@ -6,6 +6,7 @@ import module.Exceptions.TimeOutMsgException;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public interface MSG_interface {
@@ -32,6 +33,16 @@ public interface MSG_interface {
     return packet.getData()[2];
   }
 
+  static byte[] getDataMsg(DatagramPacket packet){
+    byte[] received =  packet.getData();
+    byte[] msg = new byte[received.length];
+    int i2=0;
+    int i = Constantes.CONFIG.HEAD_SIZE - 1;
+    for (; i2 < msg.length && i<Constantes.CONFIG.BUFFER_SIZE ; i++,i2++ )
+      msg[i2] = received[i];
+    return msg;
+  }
+
   default void createHeadPacket(byte sed, byte sedSeg, byte[] buff) {
     buff[0] = getType().getBytes();
     buff[1] = sed;
@@ -47,7 +58,7 @@ public interface MSG_interface {
     return buff;
   }
 
-  public DatagramPacket createPacket(byte seq, byte seqSeg);
+  //public DatagramPacket createPacket(byte seq, byte seqSeg);
 
   public void send() throws IOException, PackageErrorException;
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException;

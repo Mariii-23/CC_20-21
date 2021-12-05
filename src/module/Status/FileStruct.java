@@ -20,6 +20,18 @@ public class FileStruct {
     this.isDirectory = isDirectory;
   }
 
+  public String getName() {
+    return name;
+  }
+
+  public Long getLastModification() {
+    return lastModification;
+  }
+
+  public boolean isDirectory() {
+    return isDirectory;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

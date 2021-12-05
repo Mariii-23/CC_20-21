@@ -1,7 +1,11 @@
 package module;
 
 import module.Exceptions.PackageErrorException;
+import module.MsgType.ACK;
+import module.MsgType.GET;
 import module.MsgType.HI;
+import module.Status.FileStruct;
+
 import java.io.File;
 
 import java.io.IOException;
@@ -34,6 +38,14 @@ public class Communication implements Runnable{
         // foi o q mandou o hi
 
         // receber o ls
+      System.out.println("vou receber o ficheiro");
+      //testtar receber file
+      GET getMsg = new GET(clientIP,port,socket,++seq,"text2",pathDir);
+      try {
+        getMsg.received();
+      }catch (Exception e){
+        System.out.println(e);
+      }
 
     } catch (SocketTimeoutException e){
       try {
@@ -42,8 +54,21 @@ public class Communication implements Runnable{
 
         // manda o ls
 
+        System.out.println("vou mandar o file");
+        //testar mandar file
+        FileStruct file = new FileStruct(new File("text"));
+        GET getMsg = new GET(clientIP,port,socket,++seq,file,pathDir);
+        try {
+          getMsg.send();
+          HI hiMsg = new HI(clientIP,port,socket,seq);
+          hiMsg.send(); // vai dar barraco é so pra ele terminar
+
+        } catch (PackageErrorException e2){
+          System.out.println(e2.toString());
+        }
+
       } catch (IOException e1){
-        System.out.println("olha fodace");
+        System.out.println("olha fodace: \n"+e1);
       }
     } catch (IOException ioException) {
       ioException.printStackTrace();

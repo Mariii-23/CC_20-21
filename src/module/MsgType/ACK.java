@@ -65,7 +65,7 @@ public class ACK implements MSG_interface {
   //  return buff;
   //}
 
-  @Override
+  //@Override
   public DatagramPacket createPacket(byte sed, byte seqSeg) {
     byte[] msg = createMsg(seqPedido, seq);
     return this.packet = new DatagramPacket(msg, msg.length, clientIP, port);
@@ -130,6 +130,6 @@ public class ACK implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return  "SEQ: " + msg[1] + " SEG: " +msg[2] + "; Type: ACK" +  "; MSG: " + msg[2];
+    return  "SEQ: " + msg[1] + " SEG: " +msg[2] + "; Type: ACK" +  "; MSG: " + msg[1] + " | "+ msg[2];
   }
 }

@@ -14,8 +14,8 @@ public enum Type {
   Status((byte) 3), // status de tudo
 
   List((byte) 4), // lista dos ficheiros
-  Get((byte) 5),  // da me os ficheiros x1 x2 x3
-  Send((byte) 6); // envio dos ficheiros x1 x2 x3
+  Get((byte) 5),  // da me o ficheiros
+  Send((byte) 6); // envio do ficheiro
 
   //private final Byte num_max = (byte) 64;
   private final Byte num; //numero do tipo
