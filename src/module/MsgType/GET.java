@@ -89,62 +89,41 @@ public class GET implements MSG_interface {
     for (; i2 < info.length && i < Constantes.CONFIG.BUFFER_SIZE ; i++,i2++ ){
       buff[i] = info[i2];
     }
-    //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@");
+    //System.out.println("@@@@@@@@@@ CRIAR CAUDAAA @@@@@@@@@@@@");
     //System.out.println(new String(buff));
     //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@");
   }
 
   public DatagramPacket createPacket() {
     byte[] msg = createMsg(seqPedido,seq); seq++;
-    createTailPacket(msg);
+    //System.out.println(seq.intValue()+ "ok ok::::");
+    //System.out.println("@@@@@@@@@  BUFFER no FINAL  @@@@@@@@");
+    //System.out.println(new String(msg));
+    //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@");
     return new DatagramPacket(msg, msg.length, clientIP ,port);
   }
 
-  //return 0 se sucesso
-  //TODO o size do buff ta mal
-  public int readFile() {
-
-    if (file.isEmpty()) return -1;
-    this.fileInBytes = new LinkedList<>();
-    FileStruct f = file.get();
-    FileInputStream in;
-    try {
-      in = new FileInputStream(dir+'/'+f.getName());
-    } catch (FileNotFoundException e){
-      return -1;
-    }
-      int size = Constantes.CONFIG.TAIL_SIZE;
-      byte[] buff = new byte[size];
-      int sizeRead=0;
-    try {
-      while (-1 != (sizeRead =in.read(buff))){
-        fileInBytes.add(buff);
-        buff = new byte[size];
-        for(;sizeRead<size;sizeRead++)
-          buff[sizeRead] = (byte) 0;
-      }
-    } catch (IOException e) {
-      System.out.println(e.toString());
-      return -1;
-    }
-    return 0;
-  }
 
   public Queue<DatagramPacket> createPackets() {
     if (readFile() != 0) return null;
     Queue<DatagramPacket> list = new LinkedList<>();
     //System.out.println("numero de pacotes: "+list.size()  + "numero do array de bytes"+ fileInBytes.size());
     int len = fileInBytes.size();
-    for (var i =0 ; i < len - 1 ;i++){
+    for (var i =0 ; i < len  ;i++){
+      System.out.println("Criar pacote "+i +"\n\n\n");
       var packet = createPacket();
-      if (packet!=null)
-        while (!list.add(packet));
+      //System.out.println(new String(MSG_interface.getDataMsg(packet)));
+      //System.out.println("@@@@@@@@@@@@@@@@@@@@");
+      list.add(packet);
+      //System.out.println("acabadao\n\n\n\n");
+      //if (packet!=null)
+      //  while (!list.add(packet));
     }
     // falta o utlimo
-    type.flagOn();
-    var packet = createPacket();
-    if (packet!=null)
-      while (!list.add(packet));
+    //type.flagOn();
+    //var packet = createPacket();
+    //if (packet!=null)
+    //  list.add(packet);
 
     //System.out.println("numero de pacotes: "+list.size()  + "numero do array de bytes"+ fileInBytes.size());
     return list;
@@ -156,9 +135,12 @@ public class GET implements MSG_interface {
     // envia o pedido do file que quer
     Queue<DatagramPacket> packets = createPackets();
     System.out.println("numero de pacotes: "+packets.size());
-    for(var elem: packets){
+    for(var elem = packets.remove(); elem !=null; elem = packets.remove()){
+    //for(var elem: packets){
+      //System.out.println(new String(MSG_interface.getDataMsg(elem)));
+      //System.out.println("@@@@@@@@@@@@@@@@@@@@@");
       socket.send(elem);
-      ACK ack = new ACK(elem,port,socket,clientIP,seq); seq++;
+      ACK ack = new ACK(elem,port,socket,clientIP,seqPedido); seqPedido++;
       boolean ackFail = false;
       while (!ackFail) {
         try {
@@ -184,14 +166,19 @@ public class GET implements MSG_interface {
     System.out.println(p.toString());
 
 
+
     try (
-        OutputStream out = new BufferedOutputStream(
-        Files.newOutputStream(p, CREATE, WRITE, TRUNCATE_EXISTING)))
+        OutputStreamWriter out  =
+            new OutputStreamWriter(Files.newOutputStream(p,CREATE,WRITE,TRUNCATE_EXISTING)))
+        //OutputStream out = new BufferedOutputStream(
+        //  Files.newOutputStream(p, CREATE, WRITE, TRUNCATE_EXISTING)))
     {
+
       for(var data : array){
         //String s = new String(data, StandardCharsets.UTF_8);
-        //out.write(s,0,s.length());
-        out.write(data,0,data.length);
+        String s = new String(data);
+        out.write(s,0,s.length());
+        //out.write(data,0,data.length);
       }
       out.flush();
       out.close();
@@ -220,12 +207,14 @@ public class GET implements MSG_interface {
           i++;
           segFileReceved = validType(receivedPacket);
           if (segFileReceved) {
-            ACK ack = new ACK(receivedPacket, port, socket, clientIP, seq);
+            ACK ack = new ACK(receivedPacket, port, socket, clientIP, seqPedido);
             ack.send();
 
             System.out.println("RECEBI: "+i);
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
-            //System.out.println(new String(data));
+            System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+            System.out.println(new String(data));
+            System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
             file.add(data);
           } else {
@@ -257,20 +246,20 @@ public class GET implements MSG_interface {
     GET getMsg = new GET(s.getLocalAddress(),3001,s, (byte) 0,file,"/home/mari");
 
     getMsg.readFile();
-    for (var elem : getMsg.fileInBytes){
-      var s1 = new String(elem);
-      System.out.println("size "+ elem.length );
-      System.out.println(s1);
-      System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-    }
+    //for (var elem : getMsg.fileInBytes){
+    //  var s1 = new String(elem);
+    //  System.out.println("size "+ elem.length );
+    //  System.out.println(s1);
+    //  System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+    //}
 
     System.out.println("PACOTES\n\n\n");
     var pacotes = getMsg.createPackets();
-    for(var elem : pacotes){
-      byte[] msg = MSG_interface.getDataMsg(elem);
-      System.out.println(new String(msg));
-      System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-    }
+    //for(var elem : pacotes){
+    //  byte[] msg = MSG_interface.getDataMsg(elem);
+    //  System.out.println(new String(msg));
+    //  System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+    //}
 
     //Path p = Path.of("/home/mari/ola2");
     //try (OutputStream out = new BufferedOutputStream(
@@ -281,5 +270,35 @@ public class GET implements MSG_interface {
     //} catch (IOException x) {
     //System.err.println(x);
     //}
+  }
+
+  //return 0 se sucesso
+  public int readFile() {
+
+    if (file.isEmpty()) return -1;
+
+    this.fileInBytes = new LinkedList<>();
+    FileStruct f = file.get();
+    FileInputStream in;
+    try {
+      in = new FileInputStream(dir+'/'+f.getName());
+    } catch (FileNotFoundException e){
+      return -1;
+    }
+    int size = Constantes.CONFIG.TAIL_SIZE;
+    byte[] buff = new byte[size];
+    int sizeRead=0;
+    try {
+      while (-1 != (sizeRead =in.read(buff))){
+        for(;sizeRead<size;sizeRead++)
+          buff[sizeRead] = (byte) 0;
+        fileInBytes.add(buff.clone());
+        buff = new byte[size];
+      }
+    } catch (IOException e) {
+      System.out.println(e.toString());
+      return -1;
+    }
+    return 0;
   }
 }
