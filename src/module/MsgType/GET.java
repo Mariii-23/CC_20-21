@@ -135,7 +135,7 @@ public class GET implements MSG_interface {
     // envia o pedido do file que quer
     Queue<DatagramPacket> packets = createPackets();
     System.out.println("numero de pacotes: "+packets.size());
-    for(var elem = packets.remove(); elem !=null; elem = packets.remove()){
+    for(var elem = packets.remove(); elem !=null;){
     //for(var elem: packets){
       //System.out.println(new String(MSG_interface.getDataMsg(elem)));
       //System.out.println("@@@@@@@@@@@@@@@@@@@@@");
@@ -158,33 +158,41 @@ public class GET implements MSG_interface {
           socket.send(elem);
         }
       }
+
+      if(!packets.isEmpty())
+        elem= packets.remove();
+      else
+        elem = null;
     }
   }
 
+  //TODO o problemaesta a escrever
     public void writeFile(Queue<byte[]> array) throws IOException {
     Path p = Path.of(dir+ '/' + fileName);
     System.out.println(p.toString());
 
+      FileWriter myWriter = new FileWriter(dir+'/'+fileName);
 
-
-    try (
-        OutputStreamWriter out  =
-            new OutputStreamWriter(Files.newOutputStream(p,CREATE,WRITE,TRUNCATE_EXISTING)))
-        //OutputStream out = new BufferedOutputStream(
-        //  Files.newOutputStream(p, CREATE, WRITE, TRUNCATE_EXISTING)))
-    {
-
+    //try (
+    //    OutputStreamWriter out  =
+    //        new OutputStreamWriter(Files.newOutputStream(p,CREATE,WRITE,APPEND)))
+    //    //OutputStream out = new BufferedOutputStream(
+    //    //  Files.newOutputStream(p, CREATE, WRITE, TRUNCATE_EXISTING)))
+    //{
       for(var data : array){
-        //String s = new String(data, StandardCharsets.UTF_8);
-        String s = new String(data);
-        out.write(s,0,s.length());
+        String s = new String(data, StandardCharsets.UTF_8);
+        myWriter.write(s);
+        //String s = new String(data);
+        //out.write(s,0,s.length());
         //out.write(data,0,data.length);
       }
-      out.flush();
-      out.close();
-    } catch (IOException x) {
-      System.err.println(x);
-    }
+      myWriter.flush();
+      myWriter.close();
+      //out.flush();
+      //out.close();
+    //} catch (IOException x) {
+    //  System.err.println(x);
+    //}
   }
 
   @Override
