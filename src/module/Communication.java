@@ -1,9 +1,10 @@
 package module;
 
+import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
-import module.MsgType.ACK;
-import module.MsgType.GET;
+import module.Exceptions.TimeOutMsgException;
 import module.MsgType.HI;
+import module.MsgType.SEND;
 import module.Status.FileStruct;
 
 import java.io.File;
@@ -38,14 +39,11 @@ public class Communication implements Runnable{
         // foi o q mandou o hi
 
         // receber o ls
-      System.out.println("vou receber o ficheiro");
+      SEND getMsg = new SEND(clientIP,port,socket, seq,pathDir);
       //testtar receber file
-      GET getMsg = new GET(clientIP,port,socket,++seq,"text2",pathDir);
-      try {
+      //GET getMsg = new GET(clientIP,port,socket,++seq,"text2",pathDir);
         getMsg.received();
-      }catch (Exception e){
-        System.out.println(e);
-      }
+      System.out.println("Supostamente mandei o file");
 
     } catch (SocketTimeoutException e){
       try {
@@ -54,25 +52,28 @@ public class Communication implements Runnable{
 
         // manda o ls
 
-        System.out.println("vou mandar o file");
-        //testar mandar file
+        ////testar mandar file
         FileStruct file = new FileStruct(new File("text"));
-        GET getMsg = new GET(clientIP,port,socket,++seq,file,pathDir);
+        SEND getMsg = new SEND(clientIP,port,socket,++seq,file,pathDir);
+        //FileStruct file = new FileStruct(new File("text"));
+        //GET getMsg = new GET(clientIP,port,socket,++seq,file,pathDir);
         try {
           getMsg.send();
-          HI hiMsg = new HI(clientIP,port,socket,seq);
-          hiMsg.send(); // vai dar barraco é so pra ele terminar
+          System.out.println("Supostamente recebi o file");
 
         } catch (PackageErrorException e2){
           System.out.println(e2.toString());
+        } catch (Exception e1){
+          System.out.println("HEHEHHEHE");
         }
 
       } catch (IOException e1){
         System.out.println("olha fodace: \n"+e1);
       }
-    } catch (IOException ioException) {
+    } catch (IOException | TimeOutMsgException | PackageErrorException | AckErrorException ioException) {
       ioException.printStackTrace();
     }
+
   }
 
   private void confirmarConecao() throws IOException {

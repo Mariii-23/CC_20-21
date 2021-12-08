@@ -3,6 +3,10 @@ package module;
 import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
+import module.MsgType.ACK;
+import module.MsgType.GET;
+import module.MsgType.HI;
+import module.MsgType.SEND;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -41,6 +45,25 @@ public interface MSG_interface {
     for (; i2 < msg.length && i<Constantes.CONFIG.BUFFER_SIZE ; i++,i2++ )
       msg[i2] = received[i];
     return msg;
+  }
+
+  static byte getType(DatagramPacket packet){
+    return packet.getData()[0];
+  }
+
+  static void printMSG(DatagramPacket packet){
+    switch (getType(packet)) {
+      case (byte) 0:
+        System.out.println(HI.toString(packet)); break;
+      case (byte) 1 :
+        System.out.println(ACK.toString(packet)); break;
+      case (byte) 5:
+        System.out.println(GET.toString(packet)); break;
+      case (byte) 6:
+        System.out.println(SEND.toString(packet)); break;
+      default:
+        System.out.println("TYPE ERROR -> byte" + (int) getType(packet));
+    }
   }
 
   default void createHeadPacket(byte sed, byte sedSeg, byte[] buff) {

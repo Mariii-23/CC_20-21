@@ -9,12 +9,9 @@ import module.Status.FileStruct;
 import module.Type;
 
 import java.io.*;
-import static java.nio.file.StandardOpenOption.*;
 
 import java.net.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.Optional;
@@ -105,7 +102,9 @@ public class GET implements MSG_interface {
 
 
   public Queue<DatagramPacket> createPackets() {
-    if (readFile() != 0) return null;
+    // isto nao devia acontecer
+    if (readFile() != 0) return new LinkedList<>();
+
     Queue<DatagramPacket> list = new LinkedList<>();
     //System.out.println("numero de pacotes: "+list.size()  + "numero do array de bytes"+ fileInBytes.size());
     int len = fileInBytes.size();
@@ -134,11 +133,18 @@ public class GET implements MSG_interface {
     //TODO
     // envia o pedido do file que quer
     Queue<DatagramPacket> packets = createPackets();
-    System.out.println("numero de pacotes: "+packets.size());
+    System.out.println("numero de pacotes: "+ packets.size());
+    if (packets.isEmpty()) {
+      System.out.println("Nao mandei nenhum ficheiro");
+      //TODO Acrescentar cenas ou mudar
+
+      // mandar um bye
+      //ACK ack = new ACK(),port,socket,clientIP,seqPedido); seqPedido++;
+      //ack.send();
+      return;
+    }
+
     for(var elem = packets.remove(); elem !=null;){
-    //for(var elem: packets){
-      //System.out.println(new String(MSG_interface.getDataMsg(elem)));
-      //System.out.println("@@@@@@@@@@@@@@@@@@@@@");
       socket.send(elem);
       ACK ack = new ACK(elem,port,socket,clientIP,seqPedido); seqPedido++;
       boolean ackFail = false;
@@ -149,11 +155,13 @@ public class GET implements MSG_interface {
         } catch (TimeOutMsgException e) {
           // TODO controlo de fluxo
           // vamos diminuindo o tempo de receber cenas
-          continue;
+          socket.send(elem);
+          //continue;
         } catch (PackageErrorException e1) {
           // TODO controlo de fluxo
           // a partir de x pacotes errados, fechamos a conecao
-          continue;
+          socket.send(elem);
+          //continue;
         } catch (AckErrorException e2) {
           socket.send(elem);
         }
@@ -164,9 +172,14 @@ public class GET implements MSG_interface {
       else
         elem = null;
     }
+
+    ACK ack = new ACK(null,port,socket,clientIP,seqPedido); seqPedido++;
+    try {
+      ack.send();
+    } catch (Exception e){
+    }
   }
 
-  //TODO o problemaesta a escrever
     public void writeFile(Queue<byte[]> array) throws IOException {
     Path p = Path.of(dir+ '/' + fileName);
     System.out.println(p.toString());
@@ -197,7 +210,6 @@ public class GET implements MSG_interface {
 
   @Override
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
-    //TODO
     // recebe o pedido
     boolean fileReceved = false; // so passa a true no ultimo caso
     boolean segFileReceved = false; // so passa a true no ultimo caso
@@ -207,7 +219,6 @@ public class GET implements MSG_interface {
     Queue<byte[]> file = new LinkedList<>();
     int i =0;
     while (!fileReceved) {
-      //file = new LinkedList<>();
       segFileReceved = false;
       while (!segFileReceved){
         try {
@@ -220,9 +231,9 @@ public class GET implements MSG_interface {
 
             System.out.println("RECEBI: "+i);
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
-            System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-            System.out.println(new String(data));
-            System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+            //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+            //System.out.println(new String(data));
+            //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
             file.add(data);
           } else {
@@ -237,47 +248,13 @@ public class GET implements MSG_interface {
         }
       }
     }
-    System.out.println("Cheguei aqui");
+    //System.out.println("Cheguei aqui");
     if (!file.isEmpty()){
       writeFile(file);
     }
-    System.out.println("escrevi num file");
+    //System.out.println("escrevi num file");
 
     // envia o file que foi pedido
-  }
-
-  //TODO eliminar, apenas é uma demosntracao
-  public static void main(String[] args) throws SocketException {
-    FileStruct file = new FileStruct(new File("ola"));
-    //FileStruct file = new FileStruct(new File("/home/mari/ola"));
-    DatagramSocket  s = new DatagramSocket();
-    GET getMsg = new GET(s.getLocalAddress(),3001,s, (byte) 0,file,"/home/mari");
-
-    getMsg.readFile();
-    //for (var elem : getMsg.fileInBytes){
-    //  var s1 = new String(elem);
-    //  System.out.println("size "+ elem.length );
-    //  System.out.println(s1);
-    //  System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-    //}
-
-    System.out.println("PACOTES\n\n\n");
-    var pacotes = getMsg.createPackets();
-    //for(var elem : pacotes){
-    //  byte[] msg = MSG_interface.getDataMsg(elem);
-    //  System.out.println(new String(msg));
-    //  System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-    //}
-
-    //Path p = Path.of("/home/mari/ola2");
-    //try (OutputStream out = new BufferedOutputStream(
-    //  Files.newOutputStream(p, CREATE, WRITE, TRUNCATE_EXISTING)))
-    //{
-    //for(var data : getMsg.fileInBytes)
-    //  out.write(data, 0, data.length);
-    //} catch (IOException x) {
-    //System.err.println(x);
-    //}
   }
 
   //return 0 se sucesso
@@ -291,6 +268,7 @@ public class GET implements MSG_interface {
     try {
       in = new FileInputStream(dir+'/'+f.getName());
     } catch (FileNotFoundException e){
+      System.out.println("File not found Exception->  "+ dir+'/'+f.getName());
       return -1;
     }
     int size = Constantes.CONFIG.TAIL_SIZE;
@@ -308,5 +286,10 @@ public class GET implements MSG_interface {
       return -1;
     }
     return 0;
+  }
+
+  public static String toString(DatagramPacket packet){
+    byte[] msg = packet.getData();
+    return  "GET: " + msg[1] + " SEG: " +msg[2];
   }
 }
