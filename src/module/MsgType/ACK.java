@@ -33,8 +33,13 @@ public class ACK implements MSG_interface {
     this.packet = packet;
     this.clientIP = clientIP;
     this.socket = socket;
-    this.seqConfirmed = getSeq(packet); //pedido
-    this.seqSegConfirmed = getSeqSegmento(packet); //segmentpo
+    if (packet==null){
+      this.seqConfirmed = (byte) 0;
+      this.seqSegConfirmed = (byte) 0;
+    }else{
+      this.seqConfirmed = getSeq(packet); //pedido
+      this.seqSegConfirmed = getSeqSegmento(packet); //segmento
+    }
     this.seqPedido = seq;
     this.type.flagOn();
   }
@@ -87,10 +92,8 @@ public class ACK implements MSG_interface {
 
   @Override
   public void send() throws IOException {
-
     var packet = createPacket(seqPedido,seq);
     seq++;
-    //System.out.println( "enviado :   "+ toString(packet));
     socket.send(packet);
   }
 
@@ -106,12 +109,10 @@ public class ACK implements MSG_interface {
     }
 
     if (!validType(dpac)){
-      System.out.println("FOdace tipo");
       throw new PackageErrorException("Mensagem recebida nao é do tipo ack");
     }
 
     if (!valid(dpac)){
-      System.out.println("packet mal wtf");
       throw new AckErrorException("Seq a confirmar não é o correspondido", packet.getData()[2]);
     }
 
@@ -120,8 +121,7 @@ public class ACK implements MSG_interface {
 
   public String toString() {
     if (packet!=null) {
-      byte[] msg = packet.getData();
-      return  "SEQ: " + msg[1] + " SEG: " +msg[2] + "; Type: ACK" +  "; MSG: " + msg[2];
+      return ACK.toString(packet);
     }
     else {
       return "Packet Invalid";
@@ -130,6 +130,6 @@ public class ACK implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return  "SEQ: " + msg[1] + " SEG: " +msg[2] + "; Type: ACK" +  "; MSG: " + msg[3] + " | "+ (int) msg[4];
+    return  "[ACK]  -> SEQ: " + msg[1] + "; SEG: " +msg[2] + "; Type: ACK" + "; MSG: " + msg[3] + " | "+ msg[4];
   }
 }

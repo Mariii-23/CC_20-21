@@ -3,8 +3,8 @@ package module;
 import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
+import module.MsgType.GET;
 import module.MsgType.HI;
-import module.MsgType.SEND;
 import module.Status.FileStruct;
 
 import java.io.File;
@@ -39,11 +39,10 @@ public class Communication implements Runnable{
         // foi o q mandou o hi
 
         // receber o ls
-      SEND getMsg = new SEND(clientIP,port,socket, seq,pathDir);
+      GET getMsg = new GET(clientIP,port,socket, seq,pathDir);
       //testtar receber file
-      //GET getMsg = new GET(clientIP,port,socket,++seq,"text2",pathDir);
-        getMsg.received();
-      System.out.println("Supostamente mandei o file");
+      //SEND getMsg = new SEND(clientIP,port,socket,++seq,"text2",pathDir);
+      getMsg.received();
 
     } catch (SocketTimeoutException e){
       try {
@@ -54,21 +53,20 @@ public class Communication implements Runnable{
 
         ////testar mandar file
         FileStruct file = new FileStruct(new File("text"));
-        SEND getMsg = new SEND(clientIP,port,socket,++seq,file,pathDir);
+        GET getMsg = new GET(clientIP,port,socket,++seq,file,pathDir);
         //FileStruct file = new FileStruct(new File("text"));
-        //GET getMsg = new GET(clientIP,port,socket,++seq,file,pathDir);
+        //SEND getMsg = new SEND(clientIP,port,socket,++seq,file,pathDir);
         try {
           getMsg.send();
-          System.out.println("Supostamente recebi o file");
-
         } catch (PackageErrorException e2){
-          System.out.println(e2.toString());
+          e2.printStackTrace();
         } catch (Exception e1){
           System.out.println("HEHEHHEHE");
+          e1.printStackTrace();
         }
 
       } catch (IOException e1){
-        System.out.println("olha fodace: \n"+e1);
+        e1.printStackTrace();
       }
     } catch (IOException | TimeOutMsgException | PackageErrorException | AckErrorException ioException) {
       ioException.printStackTrace();
@@ -78,30 +76,26 @@ public class Communication implements Runnable{
 
   private void confirmarConecao() throws IOException {
     seq = (byte) 10;
-    //this.socket = new DatagramSocket(port);
     System.out.println("servidor");
 
-    HI HiMSG = new HI(clientIP,port,socket,seq);
+    HI HiMSG = new HI(clientIP,port,socket,seq);seq++;
     HiMSG.received();
   }
 
   private void iniciarConecao() throws IOException {
     socket = new DatagramSocket(port);
     //socket.setSoTimeout(2000);
-
     seq = (byte) 0;
 
-    HI hiMsg = new HI(clientIP,port,socket,seq);
-
+    HI hiMsg = new HI(clientIP,port,socket,seq); seq++;
     try {
       hiMsg.send();
     } catch (PackageErrorException e){
       //a conecao falhou porque ele recebeu um pacote errado muitas vezes
       System.out.println("A coneção falhou");
-      return;
+      e.printStackTrace();
     }
   }
-
 
   @Override
   public void run() {
@@ -114,6 +108,4 @@ public class Communication implements Runnable{
         socket.close();
       }
   }
-
-
 }

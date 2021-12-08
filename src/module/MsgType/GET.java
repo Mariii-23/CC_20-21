@@ -8,54 +8,44 @@ import module.MSG_interface;
 import module.Status.FileStruct;
 import module.Type;
 
-import java.io.*;
-
+import java.io.File;
+import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.LinkedList;
-import java.util.Optional;
-import java.util.Queue;
 
-//TODO mudar o nome este é o send file
 public class GET implements MSG_interface {
 
-    String dir;
-    private int port;
-    InetAddress clientIP;
+  private final String dir;
+  private final int port;
+  private final InetAddress clientIP;
+  private final DatagramSocket socket;
 
-    DatagramSocket socket;
+  private Byte seq;
+  private Byte seqPedido;
 
-    Byte seq;
-    Byte seqPedido;
+  private final Type type = Type.Send;
+
+  private FileStruct file;
 
 
-    Type type = Type.Get;
-
-    Optional<FileStruct> file;
-    String fileName;
-
-    Queue<byte[]> fileInBytes = null;
-
-  public GET(InetAddress clientIp, int port,DatagramSocket socket, Byte seqPedido, FileStruct file,String dir) {
+  public GET(InetAddress clientIp, int port, DatagramSocket socket, Byte seqPedido, FileStruct file, String dir) {
     this.seq = (byte) 0;
     this.port = port;
     this.clientIP = clientIp;
     this.socket = socket;
     this.seqPedido = seqPedido;
-    this.file = Optional.ofNullable(file);
-    this.fileName = file.getName();
+    this.file = file;
     this.dir = dir;
   }
 
-  public GET(InetAddress clientIP,int port,DatagramSocket socket, byte seq, String fileName, String dir){
+  public GET(InetAddress clientIP, int port, DatagramSocket socket, byte seq, String dir){
     this.seq = (byte) 0;
     this.dir = dir;
     this.port = port;
     this.clientIP = clientIP;
     this.socket = socket;
     this.seqPedido = seq;
-    this.fileName = fileName;
+    this.file = null;
   }
 
   @Override
@@ -71,225 +61,114 @@ public class GET implements MSG_interface {
   @Override
   public boolean validType(DatagramPacket packet) {
     var msg = packet.getData();
-    return msg[0] == Type.Get.getBytes();
+    return msg[0] == Type.Send.getNum();
   }
 
   @Override
   public void createTailPacket(byte[] buff) {
-    if (fileInBytes.isEmpty()) return;
-
-    byte[] info = fileInBytes.remove();
+    if(file == null)
+      return;
+    String name = file.getName();
     int i2=0;
     int i = Constantes.CONFIG.HEAD_SIZE - 1;
-    //System.out.println(Constantes.CONFIG.BUFFER_SIZE + "  BUFFER ->   "+ info.length);
-
-    for (; i2 < info.length && i < Constantes.CONFIG.BUFFER_SIZE ; i++,i2++ ){
-      buff[i] = info[i2];
+    byte[] string = name.getBytes(StandardCharsets.UTF_8);
+    for (; i2 < string.length && i < Constantes.CONFIG.BUFFER_SIZE ; i++,i2++ ){
+      buff[i] = string[i2];
     }
-    //System.out.println("@@@@@@@@@@ CRIAR CAUDAAA @@@@@@@@@@@@");
-    //System.out.println(new String(buff));
-    //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
+    for( ;i < Constantes.CONFIG.BUFFER_SIZE; i++)
+      buff[i] = 0;
+
+    buff[Constantes.CONFIG.BUFFER_SIZE-1] = 0;
   }
 
   public DatagramPacket createPacket() {
     byte[] msg = createMsg(seqPedido,seq); seq++;
-    //System.out.println(seq.intValue()+ "ok ok::::");
-    //System.out.println("@@@@@@@@@  BUFFER no FINAL  @@@@@@@@");
-    //System.out.println(new String(msg));
-    //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@");
     return new DatagramPacket(msg, msg.length, clientIP ,port);
   }
 
+  public void atualizaFileName(DatagramPacket packet){
+    File file_ = new File(getFilename(packet));
+    this.file = new FileStruct(file_);
+  }
 
-  public Queue<DatagramPacket> createPackets() {
-    // isto nao devia acontecer
-    if (readFile() != 0) return new LinkedList<>();
+  public String getFilename(DatagramPacket packet){
+    byte[] msg = MSG_interface.getDataMsg(packet);
+    int i;
+    for (i = 0; i < msg.length && msg[i] != 0; i++);
 
-    Queue<DatagramPacket> list = new LinkedList<>();
-    //System.out.println("numero de pacotes: "+list.size()  + "numero do array de bytes"+ fileInBytes.size());
-    int len = fileInBytes.size();
-    for (var i =0 ; i < len  ;i++){
-      System.out.println("Criar pacote "+i +"\n\n\n");
-      var packet = createPacket();
-      //System.out.println(new String(MSG_interface.getDataMsg(packet)));
-      //System.out.println("@@@@@@@@@@@@@@@@@@@@");
-      list.add(packet);
-      //System.out.println("acabadao\n\n\n\n");
-      //if (packet!=null)
-      //  while (!list.add(packet));
-    }
-    // falta o utlimo
-    //type.flagOn();
-    //var packet = createPacket();
-    //if (packet!=null)
-    //  list.add(packet);
-
-    //System.out.println("numero de pacotes: "+list.size()  + "numero do array de bytes"+ fileInBytes.size());
-    return list;
+    return new String(msg, 0, i,StandardCharsets.UTF_8);
   }
 
   @Override
   public void send() throws IOException, PackageErrorException {
-    //TODO
-    // envia o pedido do file que quer
-    Queue<DatagramPacket> packets = createPackets();
-    System.out.println("numero de pacotes: "+ packets.size());
-    if (packets.isEmpty()) {
-      System.out.println("Nao mandei nenhum ficheiro");
-      //TODO Acrescentar cenas ou mudar
+    DatagramPacket packet = createPacket();
+    socket.send(packet);
 
-      // mandar um bye
-      //ACK ack = new ACK(),port,socket,clientIP,seqPedido); seqPedido++;
-      //ack.send();
-      return;
-    }
-
-    for(var elem = packets.remove(); elem !=null;){
-      socket.send(elem);
-      ACK ack = new ACK(elem,port,socket,clientIP,seqPedido); seqPedido++;
-      boolean ackFail = false;
-      while (!ackFail) {
-        try {
-          ack.received();
-          ackFail = true;
-        } catch (TimeOutMsgException e) {
-          // TODO controlo de fluxo
-          // vamos diminuindo o tempo de receber cenas
-          socket.send(elem);
-          //continue;
-        } catch (PackageErrorException e1) {
-          // TODO controlo de fluxo
-          // a partir de x pacotes errados, fechamos a conecao
-          socket.send(elem);
-          //continue;
-        } catch (AckErrorException e2) {
-          socket.send(elem);
-        }
+    ACK ack = new ACK(packet,port,socket,clientIP,seqPedido); seqPedido++;
+    boolean ackFail = false;
+    while (!ackFail) {
+      try {
+        ack.received();
+        ackFail = true;
+      } catch (TimeOutMsgException | AckErrorException e) {
+        socket.send(packet);
+        //continue;
+      } catch (PackageErrorException e1) {
+        break;
+        //socket.send(packet);
+        //continue;
       }
-
-      if(!packets.isEmpty())
-        elem= packets.remove();
-      else
-        elem = null;
     }
 
-    ACK ack = new ACK(null,port,socket,clientIP,seqPedido); seqPedido++;
+    if (file == null)
+      return; // TODO lancar erro ou mandar o bye
+
+    SEND SENDMsg = new SEND(clientIP,port,socket,++seq,file.getName(),dir);
     try {
-      ack.send();
-    } catch (Exception e){
+      SENDMsg.received();
+    }catch (Exception e){
+      e.printStackTrace();
     }
-  }
-
-    public void writeFile(Queue<byte[]> array) throws IOException {
-    Path p = Path.of(dir+ '/' + fileName);
-    System.out.println(p.toString());
-
-      FileWriter myWriter = new FileWriter(dir+'/'+fileName);
-
-    //try (
-    //    OutputStreamWriter out  =
-    //        new OutputStreamWriter(Files.newOutputStream(p,CREATE,WRITE,APPEND)))
-    //    //OutputStream out = new BufferedOutputStream(
-    //    //  Files.newOutputStream(p, CREATE, WRITE, TRUNCATE_EXISTING)))
-    //{
-      for(var data : array){
-        String s = new String(data, StandardCharsets.UTF_8);
-        myWriter.write(s);
-        //String s = new String(data);
-        //out.write(s,0,s.length());
-        //out.write(data,0,data.length);
-      }
-      myWriter.flush();
-      myWriter.close();
-      //out.flush();
-      //out.close();
-    //} catch (IOException x) {
-    //  System.err.println(x);
-    //}
   }
 
   @Override
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
-    // recebe o pedido
-    boolean fileReceved = false; // so passa a true no ultimo caso
-    boolean segFileReceved = false; // so passa a true no ultimo caso
-
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
-    Queue<byte[]> file = new LinkedList<>();
-    int i =0;
-    while (!fileReceved) {
-      segFileReceved = false;
-      while (!segFileReceved){
-        try {
-          socket.receive(receivedPacket);
-          i++;
-          segFileReceved = validType(receivedPacket);
-          if (segFileReceved) {
-            ACK ack = new ACK(receivedPacket, port, socket, clientIP, seqPedido);
-            ack.send();
+    boolean receivedRightPacket = false;
+    int errors = -1;
+    while ( !receivedRightPacket && errors < 3 ){
+      errors++;
+      socket.receive(receivedPacket);
+      System.out.print("RECEBI: ");
+      MSG_interface.printMSG(receivedPacket);
+      receivedRightPacket = validType(receivedPacket);
+    }
 
-            System.out.println("RECEBI: "+i);
-            byte[] data = MSG_interface.getDataMsg(receivedPacket);
-            //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-            //System.out.println(new String(data));
-            //System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+    if (receivedRightPacket){
+      ACK ack = new ACK(receivedPacket,port,socket,clientIP,seqPedido); seqPedido++;
+      ack.send();
+      //atualizaFileName(receivedPacket);
+      String filename = getFilename(receivedPacket);
 
-            file.add(data);
-          } else {
-            fileReceved = true; //TODO MUDAR
-            // aqui é so pra teste, quando ele receber um tipo diff presume que ja nao vai receber mais pacotes
-            break;
-          }
-        } catch (SocketTimeoutException e){
-          //System.out.println("acabei");
-          //return;
-          continue;
-        }
+      if (filename == null){
+        System.out.println("O filename recebido é nulo");
+        return; //TODO send bye
+      }
+
+      SEND SENDMsg = new SEND(clientIP,port,socket,++seq,filename,dir);
+      try {
+        SENDMsg.send();
+      }catch (Exception e){
+        System.out.println(e);
       }
     }
-    //System.out.println("Cheguei aqui");
-    if (!file.isEmpty()){
-      writeFile(file);
-    }
-    //System.out.println("escrevi num file");
-
-    // envia o file que foi pedido
-  }
-
-  //return 0 se sucesso
-  public int readFile() {
-
-    if (file.isEmpty()) return -1;
-
-    this.fileInBytes = new LinkedList<>();
-    FileStruct f = file.get();
-    FileInputStream in;
-    try {
-      in = new FileInputStream(dir+'/'+f.getName());
-    } catch (FileNotFoundException e){
-      System.out.println("File not found Exception->  "+ dir+'/'+f.getName());
-      return -1;
-    }
-    int size = Constantes.CONFIG.TAIL_SIZE;
-    byte[] buff = new byte[size];
-    int sizeRead=0;
-    try {
-      while (-1 != (sizeRead =in.read(buff))){
-        for(;sizeRead<size;sizeRead++)
-          buff[sizeRead] = (byte) 0;
-        fileInBytes.add(buff.clone());
-        buff = new byte[size];
-      }
-    } catch (IOException e) {
-      System.out.println(e.toString());
-      return -1;
-    }
-    return 0;
   }
 
   public static String toString(DatagramPacket packet){
     byte[] msg = packet.getData();
-    return  "GET: " + msg[1] + " SEG: " +msg[2];
+    return  "[GET]  -> SEQ:" + msg[1] + "; SEG: " +msg[2] + "; MSG: "
+        + new String(MSG_interface.getDataMsg(packet));
   }
 }

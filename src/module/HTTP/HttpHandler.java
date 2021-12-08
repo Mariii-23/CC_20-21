@@ -31,9 +31,9 @@ public class HttpHandler implements  AutoCloseable , Runnable{
     return s.toString();
   }
 
-  /// Pedidos GET
+  /// Pedidos SEND
 
-  // Responder ao pedido do status GET /
+  // Responder ao pedido do status SEND /
   private void handleStatus() throws IOException{
     String string =  new Create_html_file(pathDir).createHtml();
     out.println("HTTP/1.1 200 OK");
@@ -89,7 +89,7 @@ public class HttpHandler implements  AutoCloseable , Runnable{
   // Handler dos pedidos
   private void handleResponse(String method, String fileRequest) throws IOException {
     switch (method) {
-      case "GET" : handleGet(fileRequest);
+      case "SEND" : handleGet(fileRequest);
       default : handleNotSupported();
     }
   }

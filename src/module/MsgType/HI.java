@@ -14,13 +14,11 @@ public class HI implements MSG_interface {
 
   private int port;
 
-  //InetAddress serverIP; // coisas que nao estao a ser bem usadas
   InetAddress clientIP; // coisas que nao estao a ser bem usadas
 
   Type type;
   DatagramPacket packet;
   DatagramSocket socket;
-  //DatagramSocket serverSocket;
 
   Byte seq = (byte) 0;
   Byte seqPedido;
@@ -156,8 +154,7 @@ public class HI implements MSG_interface {
 
   public String toString() {
     if (packet!=null) {
-      byte[] msg = packet.getData();
-      return  "SEQ: " + msg[1] + " SEG: " +msg[2]  + "; Type: HI" +  "; MSG:  HI";
+      return HI.toString(packet);
     }
     else {
       return "Packet Invalid";
@@ -166,6 +163,6 @@ public class HI implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return  "SEQ: " + msg[1] + " SEG: " +msg[2]  + "; Type: HI" +  "; MSG:  HI";
+    return  "[HI]   -> SEQ: " + msg[1] + "; SEG: " +msg[2]  + "; MSG:  HI;";
   }
 }

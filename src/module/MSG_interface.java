@@ -4,30 +4,19 @@ import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
 import module.MsgType.ACK;
-import module.MsgType.GET;
-import module.MsgType.HI;
 import module.MsgType.SEND;
+import module.MsgType.HI;
+import module.MsgType.GET;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 
 public interface MSG_interface {
-  //InetAddress getAddress(); // endereco a enviar
   int getPort();
   Type getType();
 
-
-
   public boolean validType(DatagramPacket packet);
-
   public String toString();
-
-  //temos que implementar
-  //public static boolean validType(DatagramPacket packet) {
-  //  return false;
-  //}
 
   default byte getSeq(DatagramPacket packet) {
     return packet.getData()[1];
@@ -58,9 +47,9 @@ public interface MSG_interface {
       case (byte) 1 :
         System.out.println(ACK.toString(packet)); break;
       case (byte) 5:
-        System.out.println(GET.toString(packet)); break;
-      case (byte) 6:
         System.out.println(SEND.toString(packet)); break;
+      case (byte) 6:
+        System.out.println(GET.toString(packet)); break;
       default:
         System.out.println("TYPE ERROR -> byte" + (int) getType(packet));
     }
@@ -80,8 +69,6 @@ public interface MSG_interface {
     createTailPacket(buff);
     return buff;
   }
-
-  //public DatagramPacket createPacket(byte seq, byte seqSeg);
 
   public void send() throws IOException, PackageErrorException;
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException;
