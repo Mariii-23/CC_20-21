@@ -23,9 +23,10 @@ public class GET implements MSG_interface {
   private Byte seq;
   private Byte seqPedido;
 
-  private final Type type = Type.Send;
+  private final Type type = Type.Get;
 
   private FileStruct file;
+  private final DatagramPacket packet;
 
 
   public GET(InetAddress clientIp, int port, DatagramSocket socket, Byte seqPedido, FileStruct file, String dir) {
@@ -36,6 +37,7 @@ public class GET implements MSG_interface {
     this.seqPedido = seqPedido;
     this.file = file;
     this.dir = dir;
+    this.packet = null;
   }
 
   public GET(InetAddress clientIP, int port, DatagramSocket socket, byte seq, String dir){
@@ -46,6 +48,18 @@ public class GET implements MSG_interface {
     this.socket = socket;
     this.seqPedido = seq;
     this.file = null;
+    this.packet = null;
+  }
+
+  public GET(DatagramPacket packet,InetAddress clientIP, int port, DatagramSocket socket, byte seq, String dir){
+    this.seq = (byte) 0;
+    this.dir = dir;
+    this.port = port;
+    this.clientIP = clientIP;
+    this.socket = socket;
+    this.seqPedido = seq;
+    this.file = null;
+    this.packet = packet;
   }
 
   @Override
@@ -61,7 +75,7 @@ public class GET implements MSG_interface {
   @Override
   public boolean validType(DatagramPacket packet) {
     var msg = packet.getData();
-    return msg[0] == Type.Send.getNum();
+    return msg[0] == Type.Get.getNum();
   }
 
   @Override
@@ -135,34 +149,35 @@ public class GET implements MSG_interface {
   @Override
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
-    DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
+    //DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
     boolean receivedRightPacket = false;
-    int errors = -1;
-    while ( !receivedRightPacket && errors < 3 ){
-      errors++;
-      socket.receive(receivedPacket);
-      System.out.print("RECEBI: ");
-      MSG_interface.printMSG(receivedPacket);
-      receivedRightPacket = validType(receivedPacket);
+    //int errors = -1;
+    //while ( !receivedRightPacket && errors < 3 ){
+      //errors++;
+      //socket.receive(receivedPacket);
+      //System.out.print("RECEBI: ");
+      //MSG_interface.printMSG(receivedPacket);
+      //receivedRightPacket = validType(receivedPacket);
+    //}
+    //receivedRightPacket = validType(packet);
+    System.out.print("RECEBI: ");
+    MSG_interface.printMSG(packet);
+
+    ACK ack = new ACK(packet,port,socket,clientIP,seqPedido); seqPedido++;
+    ack.send();
+    //atualizaFileName(receivedPacket);
+    String filename = getFilename(packet);
+
+    if (filename == null){
+      System.out.println("O filename recebido é nulo");
+      return; //TODO send bye
     }
 
-    if (receivedRightPacket){
-      ACK ack = new ACK(receivedPacket,port,socket,clientIP,seqPedido); seqPedido++;
-      ack.send();
-      //atualizaFileName(receivedPacket);
-      String filename = getFilename(receivedPacket);
-
-      if (filename == null){
-        System.out.println("O filename recebido é nulo");
-        return; //TODO send bye
-      }
-
-      SEND SENDMsg = new SEND(clientIP,port,socket,++seq,filename,dir);
-      try {
-        SENDMsg.send();
-      }catch (Exception e){
-        System.out.println(e);
-      }
+    SEND SENDMsg = new SEND(clientIP,port,socket,++seq,filename,dir);
+    try {
+      SENDMsg.send();
+    }catch (Exception e){
+      System.out.println(e);
     }
   }
 

@@ -10,6 +10,9 @@ import module.MsgType.GET;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 
 public interface MSG_interface {
   int getPort();
@@ -47,9 +50,9 @@ public interface MSG_interface {
       case (byte) 1 :
         System.out.println(ACK.toString(packet)); break;
       case (byte) 5:
-        System.out.println(SEND.toString(packet)); break;
-      case (byte) 6:
         System.out.println(GET.toString(packet)); break;
+      case (byte) 6:
+        System.out.println(SEND.toString(packet)); break;
       default:
         System.out.println("TYPE ERROR -> byte" + (int) getType(packet));
     }
@@ -72,4 +75,26 @@ public interface MSG_interface {
 
   public void send() throws IOException, PackageErrorException;
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException;
+
+  static void treatMsg(DatagramPacket packet, DatagramSocket socket,byte seq,String dir) throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
+    MSG_interface msg_interface;
+    switch (getType(packet)) {
+      case (byte) 0:
+        msg_interface = new HI(packet,socket.getLocalPort(),socket, seq);
+        break;
+      case (byte) 1:
+        msg_interface = new ACK(packet,socket.getLocalPort(),socket,socket.getInetAddress(),seq);
+        break;
+      case (byte) 5:
+        msg_interface = new GET(packet,socket.getInetAddress(),socket.getLocalPort(),socket,seq,dir);
+        break;
+      case (byte) 6:
+        msg_interface = new SEND(packet,socket.getInetAddress(),socket.getLocalPort(),socket,seq,dir);
+        break;
+      default:
+        System.out.println("TYPE ERROR -> byte" + (int) getType(packet));
+        return;
+    }
+    msg_interface.received();
+  }
 }

@@ -22,11 +22,12 @@ public class SEND implements MSG_interface {
     private final int port;
     InetAddress clientIP;
     DatagramSocket socket;
+    DatagramPacket packet;
 
     Byte seq;
     Byte seqPedido;
 
-    Type type = Type.Get;
+    Type type = Type.Send;
 
     String fileName;
     Queue<byte[]> fileInBytes = null;
@@ -51,6 +52,16 @@ public class SEND implements MSG_interface {
     this.fileName = fileName;
   }
 
+  public SEND(DatagramPacket packet,InetAddress clientIP, int port, DatagramSocket socket, byte seq, String dir){
+    this.seq = (byte) 0;
+    this.dir = dir;
+    this.port = port;
+    this.clientIP = clientIP;
+    this.socket = socket;
+    this.seqPedido = seq;
+    this.packet = packet;
+  }
+
   @Override
   public int getPort() {
     return socket.getPort();
@@ -64,7 +75,7 @@ public class SEND implements MSG_interface {
   @Override
   public boolean validType(DatagramPacket packet) {
     var msg = packet.getData();
-    return msg[0] == Type.Get.getBytes();
+    return msg[0] == Type.Send.getBytes();
   }
 
   @Override
