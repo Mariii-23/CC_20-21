@@ -1,25 +1,25 @@
 package module;
 
+import control.SeqPedido;
 import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
-import module.MsgType.ACK;
-import module.MsgType.SEND;
-import module.MsgType.HI;
-import module.MsgType.GET;
+import module.MsgType.*;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
 
 public interface MSG_interface {
   int getPort();
   Type getType();
 
-  public boolean validType(DatagramPacket packet);
-  public String toString();
+  void setPort(int port);
+  boolean validType(DatagramPacket packet);
+  String toString();
+  DatagramPacket getPacket();
+  void setSocket(DatagramSocket socket);
 
   default byte getSeq(DatagramPacket packet) {
     return packet.getData()[1];
@@ -33,7 +33,7 @@ public interface MSG_interface {
     byte[] received =  packet.getData();
     byte[] msg = new byte[received.length];
     int i2=0;
-    int i = Constantes.CONFIG.HEAD_SIZE - 1;
+    int i = Constantes.CONFIG.HEAD_SIZE ;
     for (; i2 < msg.length && i<Constantes.CONFIG.BUFFER_SIZE ; i++,i2++ )
       msg[i2] = received[i];
     return msg;
@@ -58,10 +58,10 @@ public interface MSG_interface {
     }
   }
 
-  default void createHeadPacket(byte sed, byte sedSeg, byte[] buff) {
+  default void createHeadPacket(byte sed, byte seqSeg, byte[] buff) {
     buff[0] = getType().getBytes();
     buff[1] = sed;
-    buff[2] = sedSeg;
+    buff[2] = seqSeg;
   }
 
   public void createTailPacket(byte[] buff);
@@ -74,16 +74,64 @@ public interface MSG_interface {
   }
 
   public void send() throws IOException, PackageErrorException;
+  public void send(DatagramSocket socket) throws IOException, PackageErrorException;
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException;
 
-  static void treatMsg(DatagramPacket packet, DatagramSocket socket,byte seq,String dir) throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
+  static void treatMsg(DatagramPacket packet, DatagramSocket socket,SeqPedido seq,String dir) throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
+    MSG_interface msg_interface;
+    InetAddress clientIp = packet.getAddress();
+    switch (getType(packet)) {
+      case (byte) 0:
+        msg_interface = new HI(packet,socket.getLocalPort(),socket, seq);
+        break;
+      case (byte) 1:
+        msg_interface = new ACK(packet,socket.getLocalPort(),socket,packet.getAddress(),seq.getSeq());
+        break;
+      case (byte) 5:
+        msg_interface = new GET(packet,packet.getAddress(),socket.getLocalPort(),socket,seq,dir);
+        break;
+      case (byte) 6:
+        msg_interface = new SEND(packet,packet.getAddress(),socket.getLocalPort(),socket,seq,dir);
+        break;
+      default:
+        System.out.println("TYPE ERROR -> byte" + (int) getType(packet));
+        return;
+    }
+    msg_interface.received();
+  }
+
+  static MSG_interface createMsg(DatagramPacket packet, DatagramSocket socket,SeqPedido seq, String dir) throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
+    MSG_interface msg_interface;
+    //TODO
+    InetAddress clientIp = packet.getAddress();
+    switch (getType(packet)) {
+      case (byte) 0:
+        msg_interface = new HI(packet,socket.getLocalPort(),socket, seq);
+        break;
+      case (byte) 1:
+        msg_interface = new ACK(packet,socket.getLocalPort(),socket,packet.getAddress(),seq.getSeq());
+        break;
+      case (byte) 5:
+        msg_interface = new GET(packet,packet.getAddress(),socket.getLocalPort(),socket,seq,dir);
+        break;
+      case (byte) 6:
+        msg_interface = new SEND(packet,packet.getAddress(),socket.getLocalPort(),socket,seq,dir);
+        break;
+      default:
+        System.out.println("TYPE ERROR -> byte" + (int) getType(packet));
+        return null;
+    }
+    return msg_interface;
+  }
+
+  static int treatMsg_anf_get_port(DatagramPacket packet, DatagramSocket socket,SeqPedido seq,String dir) throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
     MSG_interface msg_interface;
     switch (getType(packet)) {
       case (byte) 0:
         msg_interface = new HI(packet,socket.getLocalPort(),socket, seq);
         break;
       case (byte) 1:
-        msg_interface = new ACK(packet,socket.getLocalPort(),socket,socket.getInetAddress(),seq);
+        msg_interface = new ACK(packet,socket.getLocalPort(),socket,socket.getInetAddress(),seq.getSeq());
         break;
       case (byte) 5:
         msg_interface = new GET(packet,socket.getInetAddress(),socket.getLocalPort(),socket,seq,dir);
@@ -93,8 +141,9 @@ public interface MSG_interface {
         break;
       default:
         System.out.println("TYPE ERROR -> byte" + (int) getType(packet));
-        return;
+        return -1;
     }
     msg_interface.received();
+    return msg_interface.getPort();
   }
 }

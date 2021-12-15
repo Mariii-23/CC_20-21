@@ -1,10 +1,10 @@
 package module.MsgType;
 
+import control.SeqPedido;
 import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
 import module.MSG_interface;
-import module.Type;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -24,9 +24,9 @@ public class List implements MSG_interface {
   DatagramSocket socket;
   DatagramSocket serverSocket;
 
-  Byte seq;
+  SeqPedido seq;
 
-  public List(int port, InetAddress clientIP, DatagramSocket socket, Byte seq, String path) throws SocketException {
+  public List(int port, InetAddress clientIP, DatagramSocket socket, SeqPedido seq, String path) throws SocketException {
     this.port = port;
     this.clientIP = clientIP;
     this.packet = null;
@@ -37,7 +37,7 @@ public class List implements MSG_interface {
   }
 
 
-  public List(DatagramPacket packet,int port,DatagramSocket socket, byte seq, String path) throws SocketException {
+  public List(DatagramPacket packet,int port,DatagramSocket socket, SeqPedido seq, String path) throws SocketException {
     this.port = port;
     this.clientIP = packet.getAddress();
     this.packet = packet;
@@ -47,6 +47,17 @@ public class List implements MSG_interface {
     this.path = path;
   }
 
+  public void setSocket(DatagramSocket socket) {
+    this.socket = socket;
+  }
+  @Override
+  public DatagramPacket getPacket() {
+    return packet;
+  }
+
+  public void setPort(int port) {
+    this.port = port;
+  }
   @Override
   public int getPort() {
     return port;
@@ -78,7 +89,11 @@ public class List implements MSG_interface {
   @Override
   public void send() throws IOException, PackageErrorException {
     //TODO
+  }
 
+  @Override
+  public void send(DatagramSocket socket) throws IOException, PackageErrorException {
+    //TODO
   }
 
   @Override

@@ -1,65 +1,65 @@
 package module.MsgType;
 
+import control.SeqPedido;
 import module.Constantes;
 import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
 import module.MSG_interface;
-import module.Type;
 
 import java.io.*;
 
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.Queue;
 
-//TODO mudar o nome este é o send file
 public class SEND implements MSG_interface {
 
     String dir;
-    private final int port;
+    private int port;
     InetAddress clientIP;
     DatagramSocket socket;
     DatagramPacket packet;
 
-    Byte seq;
+    Byte seq = (byte) 0;
     Byte seqPedido;
+    SeqPedido controlSeqPedido;
 
     Type type = Type.Send;
 
     String fileName;
     Queue<byte[]> fileInBytes = null;
 
-  public SEND(InetAddress clientIp, int port, DatagramSocket socket, Byte seqPedido, String fileName, String dir) {
-    this.seq = (byte) 0;
+  public SEND(InetAddress clientIp, int port, DatagramSocket socket, SeqPedido seqPedido, String fileName, String dir) {
     this.port = port;
     this.clientIP = clientIp;
     this.socket = socket;
-    this.seqPedido = seqPedido;
+    //this.seqPedido = seqPedido.getSeq();
+    this.controlSeqPedido = seqPedido;
     this.dir = dir;
     this.fileName = fileName;
   }
 
-  public SEND(InetAddress clientIP, int port, DatagramSocket socket, byte seq, String fileName, String dir){
-    this.seq = (byte) 0;
+  public SEND(DatagramPacket packet,InetAddress clientIP, int port, DatagramSocket socket, SeqPedido seq, String dir){
     this.dir = dir;
     this.port = port;
     this.clientIP = clientIP;
     this.socket = socket;
-    this.seqPedido = seq;
-    this.fileName = fileName;
-  }
-
-  public SEND(DatagramPacket packet,InetAddress clientIP, int port, DatagramSocket socket, byte seq, String dir){
-    this.seq = (byte) 0;
-    this.dir = dir;
-    this.port = port;
-    this.clientIP = clientIP;
-    this.socket = socket;
-    this.seqPedido = seq;
+    //this.seqPedido = seq.getSeq();
+    this.controlSeqPedido = seq;
     this.packet = packet;
+  }
+
+  public void setPort(int port) {
+    this.port = port;
+  }
+  public void setSocket(DatagramSocket socket) {
+    this.socket = socket;
+  }
+  @Override
+  public DatagramPacket getPacket() {
+    return packet;
   }
 
   @Override
@@ -84,7 +84,7 @@ public class SEND implements MSG_interface {
 
     byte[] info = fileInBytes.remove();
     int i2=0;
-    int i = Constantes.CONFIG.HEAD_SIZE - 1;
+    int i = Constantes.CONFIG.HEAD_SIZE;
 
     for (; i2 < info.length && i < Constantes.CONFIG.BUFFER_SIZE ; i++,i2++ ){
       buff[i] = info[i2];
@@ -95,7 +95,6 @@ public class SEND implements MSG_interface {
     byte[] msg = createMsg(seqPedido,seq); seq++;
     return new DatagramPacket(msg, msg.length, clientIP ,port);
   }
-
 
   public Queue<DatagramPacket> createPackets() {
     // isto nao devia acontecer
@@ -110,6 +109,7 @@ public class SEND implements MSG_interface {
 
   @Override
   public void send() throws IOException, PackageErrorException {
+    this.seqPedido = controlSeqPedido.getSeq();
     Queue<DatagramPacket> packets = createPackets();
     if (packets.isEmpty()) {
       System.out.println("Nao mandei nenhum ficheiro");
@@ -120,7 +120,7 @@ public class SEND implements MSG_interface {
 
     for(var elem = packets.remove(); elem !=null;){
       socket.send(elem);
-      ACK ack = new ACK(elem,port,socket,clientIP,seqPedido); seqPedido++;
+      ACK ack = new ACK(elem,port,socket,clientIP,seq);
       boolean ackFail = false;
       int ackError=0;
       int packageError=0;
@@ -177,6 +177,63 @@ public class SEND implements MSG_interface {
       myWriter.close();
   }
 
+  public void send(DatagramSocket socket) throws IOException, PackageErrorException {
+    Queue<DatagramPacket> packets = createPackets();
+    if (packets.isEmpty()) {
+      System.out.println("Nao mandei nenhum ficheiro");
+      //TODO Acrescentar cenas ou mudar
+      // mandar um bye
+      return;
+    }
+
+    for(var elem = packets.remove(); elem !=null;){
+      socket.send(elem);
+      ACK ack = new ACK(elem,port,socket,clientIP,seq);
+      boolean ackFail = false;
+      int ackError=0;
+      int packageError=0;
+      int timeOutError=0;
+      while (!ackFail) {
+        try {
+          ack.received();
+          ackFail = true;
+        } catch (TimeOutMsgException e) {
+          if (timeOutError>5)
+            break;
+          timeOutError++;
+          // TODO controlo de fluxo
+          // vamos diminuindo o tempo de receber cenas
+          socket.send(elem);
+          //continue;
+        } catch (PackageErrorException e1) {
+          // TODO controlo de fluxo
+          // a partir de x pacotes errados, fechamos a conecao
+          if (packageError > 3) break;
+          packageError++;
+          socket.send(elem);
+          //continue;
+        } catch (AckErrorException e2) {
+          if (ackError>3) break;
+          ackError++;
+          socket.send(elem);
+        }
+      }
+      if (ackError>3 || packageError>3 || timeOutError>5) break;
+
+      if(!packets.isEmpty())
+        elem= packets.remove();
+      else
+        elem = null;
+    }
+
+    //TODO MUDAR
+    ACK ack = new ACK(null,port,socket,clientIP,seqPedido); seqPedido++;
+    try {
+      ack.send();
+    } catch (Exception e){
+    }
+  }
+
   @Override
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
     // recebe o pedido
@@ -197,7 +254,7 @@ public class SEND implements MSG_interface {
           if (segFileReceved) {
             System.out.print("RECEBI: ");
             MSG_interface.printMSG(receivedPacket);
-            ACK ack = new ACK(receivedPacket, port, socket, clientIP, seqPedido);
+            ACK ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq());
             ack.send();
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
             file.add(data);

@@ -1,11 +1,11 @@
 package module.MsgType;
 
+import control.SeqPedido;
 import module.Constantes;
 import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
 import module.MSG_interface;
-import module.Type;
 
 import java.io.IOException;
 import java.net.*;
@@ -16,31 +16,45 @@ public class HI implements MSG_interface {
 
   InetAddress clientIP; // coisas que nao estao a ser bem usadas
 
-  Type type;
+  Type type = Type.Hi;
   DatagramPacket packet;
   DatagramSocket socket;
 
   Byte seq = (byte) 0;
-  Byte seqPedido;
+  SeqPedido seqPedido;
 
-  public HI(InetAddress clientIp, int port,DatagramSocket socket, byte seq) throws SocketException {
+  boolean know_port;
+
+  public HI(InetAddress clientIp, int port,DatagramSocket socket, SeqPedido seq) throws SocketException {
     //this.serverIP = serverIP;
     this.clientIP = clientIp;
     this.port = port;
     this.socket = socket;
-    type = Type.Hi;
     this.packet = null;
     this.seqPedido = seq;
+    know_port = true;
     //this.serverSocket = new DatagramSocket();
   }
 
-  public HI(DatagramPacket packet,int port,DatagramSocket socket, byte seq) throws SocketException {
+  public HI(DatagramPacket packet,int port,DatagramSocket socket, SeqPedido seq) throws SocketException {
     this.port = port;
     this.clientIP = packet.getAddress();
     this.packet = packet;
     this.socket = socket;
     this.seqPedido = seq;
+    know_port = false;
     //this.serverSocket = new DatagramSocket();
+  }
+
+  public void setPort(int port) {
+    this.port = port;
+  }
+  public void setSocket(DatagramSocket socket) {
+    this.socket = socket;
+  }
+  @Override
+  public DatagramPacket getPacket() {
+    return packet;
   }
 
   @Override
@@ -57,7 +71,7 @@ public class HI implements MSG_interface {
     String msg = "HI";
     byte[] msgByte = msg.getBytes();
 
-    for(int i= Constantes.CONFIG.HEAD_SIZE-1; i<msgByte.length;i++)
+    for(int i= Constantes.CONFIG.HEAD_SIZE; i<msgByte.length;i++)
       buff[i] = msgByte[i-2];
   }
 
@@ -72,10 +86,14 @@ public class HI implements MSG_interface {
     return  msg[0] == Type.Hi.getBytes();
   }
 
+  public static boolean valid(DatagramPacket packet){
+    byte[] msg = packet.getData();
+    return  msg[0] == Type.Hi.getBytes();
+  }
 
-  public void send() throws IOException, SocketTimeoutException, PackageErrorException {
+  public void send() throws IOException, PackageErrorException {
 
-    var sendPackage = createPacket(seqPedido,seq);
+    var sendPackage = createPacket(seqPedido.getSeq(),seq);
     socket.send(sendPackage);
     seq++;
 
@@ -87,6 +105,9 @@ public class HI implements MSG_interface {
     while (!receveidPackage) {
       try {
         socket.receive(receivedPacket);
+        if (!know_port)
+          port = receivedPacket.getPort();
+
       } catch (IOException e) {
         throw new SocketTimeoutException("Não recebeu nada");
       }
@@ -96,7 +117,42 @@ public class HI implements MSG_interface {
         // mais q 3 vezes e ele manda um package error
       } else {
         System.out.println("RECEBI: " + HI.toString(receivedPacket));
-        ACK ack = new ACK(receivedPacket, port, socket, clientIP, seq);
+        ACK ack = new ACK(receivedPacket, port, socket, clientIP, seqPedido.getSeq());
+        ack.send();
+        receveidPackage = true;
+      }
+    }
+  }
+
+  public void send(DatagramSocket socket) throws IOException, SocketTimeoutException, PackageErrorException {
+
+    var sendPackage = createPacket(seqPedido.getSeq(),seq);
+    System.out.println("Vou mandar por aqui -> " +port);
+    this.socket.send(sendPackage);
+    seq++;
+
+    byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
+    DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
+    //TODO
+    this.socket.setSoTimeout(2000);
+
+    boolean receveidPackage = false;
+    while (!receveidPackage) {
+      try {
+        this.socket.receive(receivedPacket);
+        if (!know_port)
+          port = receivedPacket.getPort();
+
+      } catch (IOException e) {
+        throw new SocketTimeoutException("Não recebeu nada");
+      }
+
+      if (!validType(receivedPacket)){
+        //TODO chamar controlo de fluxo
+        // mais q 3 vezes e ele manda um package error
+      } else {
+        System.out.println("RECEBI: " + HI.toString(receivedPacket));
+        ACK ack = new ACK(receivedPacket, port, socket, clientIP, seqPedido.getSeq());
         ack.send();
         receveidPackage = true;
       }
@@ -112,6 +168,8 @@ public class HI implements MSG_interface {
       while (!hiReceved) {
         try {
           socket.receive(receivedPacket);
+          if (!know_port)
+            port = receivedPacket.getPort();
 
           hiReceved = validType(receivedPacket);
           //TODO se for falso varias vezes temos q fazer algo
@@ -126,7 +184,7 @@ public class HI implements MSG_interface {
 
       boolean hiMsgReceveid = false;
       while (!hiMsgReceveid) {
-        DatagramPacket hiPacket = createPacket(seqPedido,seq);
+        DatagramPacket hiPacket = createPacket(seqPedido.getSeq(),seq);
         seq++;
         socket.send(hiPacket);
 
@@ -153,12 +211,10 @@ public class HI implements MSG_interface {
   }
 
   public String toString() {
-    if (packet!=null) {
+    if (packet!=null)
       return HI.toString(packet);
-    }
-    else {
+    else
       return "Packet Invalid";
-    }
   }
 
   public static String toString(DatagramPacket packet) {

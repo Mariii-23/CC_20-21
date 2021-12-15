@@ -5,7 +5,6 @@ import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
 import module.MSG_interface;
-import module.Type;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -44,6 +43,13 @@ public class ACK implements MSG_interface {
     this.type.flagOn();
   }
 
+  public void setPort(int port) {
+    this.port = port;
+  }
+
+  public void setSocket(DatagramSocket socket) {
+    this.socket = socket;
+  }
 
   @Override
   public int getPort() {
@@ -55,7 +61,6 @@ public class ACK implements MSG_interface {
     return type;
   }
 
-  //TODO Acrescentar o ultimo seq
   @Override
   public void createTailPacket(byte[] buff) {
     buff[3]  = seqConfirmed;
@@ -63,20 +68,16 @@ public class ACK implements MSG_interface {
   }
 
   //@Override
-  //public byte[] createMsg(byte seq, byte seqSeg){
-  //  byte[] buff = new byte[5];
-  //  createHeadPacket(seqPedido,seq, buff);
-  //  createTailPacket(buff);
-  //  return buff;
-  //}
-
-  //@Override
   public DatagramPacket createPacket(byte sed, byte seqSeg) {
     byte[] msg = createMsg(seqPedido, seq);
     return this.packet = new DatagramPacket(msg, msg.length, clientIP, port);
   }
 
-  //TODO
+  @Override
+  public DatagramPacket getPacket() {
+    return packet;
+  }
+
   @Override
   public boolean validType(DatagramPacket packet) {
     var msg = packet.getData();
@@ -85,21 +86,23 @@ public class ACK implements MSG_interface {
 
   private boolean valid(DatagramPacket packet) {
     var msg = packet.getData();
-    //System.out.println(msg[4] + "    seq segmento " + seqSegConfirmed);
-    //System.out.println(msg[3] + "    pedido " + seqConfirmed);
     return msg[4] == this.seqSegConfirmed && msg[3] == this.seqConfirmed;
   }
 
   @Override
   public void send() throws IOException {
     var packet = createPacket(seqPedido,seq);
-    seq++;
+    socket.send(packet);
+  }
+
+  @Override
+  public void send(DatagramSocket socket) throws IOException, PackageErrorException {
+    var packet = createPacket(seqPedido,seq);
     socket.send(packet);
   }
 
   @Override
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
-
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     DatagramPacket dpac = new DatagramPacket(buff, buff.length);
     try {
@@ -108,14 +111,13 @@ public class ACK implements MSG_interface {
       throw new TimeOutMsgException("Tempo de resposta ultrapassado");
     }
 
-    if (!validType(dpac)){
+    if (!validType(dpac))
       throw new PackageErrorException("Mensagem recebida nao é do tipo ack");
-    }
 
-    if (!valid(dpac)){
+    if (!valid(dpac))
       throw new AckErrorException("Seq a confirmar não é o correspondido", packet.getData()[2]);
-    }
 
+    port = dpac.getPort();
     System.out.println("RECEBI: "+ ACK.toString(dpac));
   }
 
@@ -130,6 +132,6 @@ public class ACK implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return  "[ACK]  -> SEQ: " + msg[1] + "; SEG: " +msg[2] + "; Type: ACK" + "; MSG: " + msg[3] + " | "+ msg[4];
+    return  "[ACK]  -> SEQ: " + msg[1] + "; SEG: " +msg[2] + "; MSG: Seq: " + msg[3] + " Seg: "+ msg[4];
   }
 }

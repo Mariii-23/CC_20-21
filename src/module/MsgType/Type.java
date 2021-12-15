@@ -1,4 +1,4 @@
-package module;
+package module.MsgType;
 
 import module.MsgType.HI;
 
