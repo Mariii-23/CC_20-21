@@ -6,6 +6,7 @@ import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
 import module.MsgType.GET;
 import module.MsgType.HI;
+import module.MsgType.List;
 import module.Status.FileStruct;
 
 import java.io.File;
@@ -39,41 +40,64 @@ public class Communication implements Runnable{
         // foi o q mandou o hi
 
         // receber o ls
+      List getMsg = new List(port, clientIP, socket, seqPedido, pathDir);
+      //testtar receber file
+      //SEND getMsg = new SEND(clientIP,port,socket,++seq,"text2",pathDir);
+      getMsg.received();
 
-        byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
-        DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
-        try {
-          socket.receive(receivedPacket);
+
+        //byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
+        //DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
+        //try {
+        //  socket.receive(receivedPacket);
           //System.out.println("Recebi algo do ip -> " + clientIP);
-          ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,clientIP, pathDir,receivedPacket);
-          msg.run();
+        //  ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,clientIP, pathDir,receivedPacket);
+        //  msg.run();
 
-        } catch (IOException ex) {
-          ex.printStackTrace();
-        } catch (TimeOutMsgException e) {
-          e.printStackTrace();
-        } catch (PackageErrorException e) {
-          e.printStackTrace();
-        } catch (AckErrorException e) {
-          e.printStackTrace();
-        }
+        //} catch (IOException ex) {
+        //  ex.printStackTrace();
+        //} catch (TimeOutMsgException e) {
+        //  e.printStackTrace();
+        //} catch (PackageErrorException e) {
+        //  e.printStackTrace();
+        //} catch (AckErrorException e) {
+        //  e.printStackTrace();
+        //}
     } catch (SocketTimeoutException e){
       try {
         confirmarConecao();
-        //foi o q recebeu
-        // manda o ls
 
-        ////testar mandar file
-        FileStruct file = new FileStruct(new File("text"));
-        GET getMsg = new GET(clientIP,port,socket,seqPedido,file,pathDir);
-        ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,getMsg,clientIP,port);
-        msg.run();
+ //////////////// Mandar 1 file
+        //FileStruct file = new FileStruct(new File("text"));
+        //GET getMsg = new GET(clientIP,port,socket,seqPedido,file,pathDir);
+        //ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,getMsg,clientIP,port);
+        //msg.run();
+////////////////////
+
+        /////////// JORGE ////////////////
+        List getMsg = new List(port, clientIP, socket, seqPedido, pathDir);
+        try {
+          getMsg.send();
+        } catch (PackageErrorException e2){
+          e2.printStackTrace();
+        } catch (Exception e1){
+          System.out.println("HEHEHHEHE");
+          e1.printStackTrace();
+        }
+        /////////////////////////////
+
 
       } catch (IOException e1){
         e1.printStackTrace();
       }
     } catch (IOException ioException) {
       ioException.printStackTrace();
+    } catch (AckErrorException e) {
+      e.printStackTrace();
+    } catch (PackageErrorException e) {
+      e.printStackTrace();
+    } catch (TimeOutMsgException e) {
+      e.printStackTrace();
     }
 
   }

@@ -1,10 +1,7 @@
 package module.Status;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Directory {
   HashMap<String,FileStruct> files;
@@ -48,6 +45,23 @@ public class Directory {
         }
     }
     return success;
+  }
+
+  public ArrayList<String> compareDirectories(HashMap<String, FileStruct> files) {
+    ArrayList<String> filesReceived = new ArrayList<>();
+    for (FileStruct fs: files.values()) {
+      if (this.files.containsKey(fs.name)) {
+        FileStruct aux = this.files.get(fs.name);
+        if (aux.getLastModification() < fs.getLastModification()) {
+          filesReceived.add(fs.name);
+        }
+      }
+      else {
+        filesReceived.add(fs.name);
+      }
+
+    }
+    return filesReceived;
   }
 
   @Override

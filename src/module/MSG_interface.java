@@ -49,6 +49,8 @@ public interface MSG_interface {
         System.out.println(HI.toString(packet)); break;
       case (byte) 1 :
         System.out.println(ACK.toString(packet)); break;
+      case (byte) 4 :
+        System.out.println(List.toString(packet));break;
       case (byte) 5:
         System.out.println(GET.toString(packet)); break;
       case (byte) 6:

@@ -48,9 +48,9 @@ public enum Type {
   }
 
   public Byte getBytes() {
-    if (flagLast)
-      return (byte) (num.intValue() + 64);
-    else
+    //if (flagLast)
+    //  return (byte) (num.intValue() + 64);
+    //else
       return num;
   }
 
