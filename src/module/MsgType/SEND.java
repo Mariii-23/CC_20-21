@@ -84,6 +84,10 @@ public class SEND implements MSG_interface {
     if (fileInBytes.isEmpty()) return;
 
     byte[] info = fileInBytes.remove();
+
+    int counter = 0;
+    System.out.println("counter: " + counter + "; info size: " + info.length + "; info: " + Arrays.toString(info));
+
     int i2=0;
     int i = Constantes.CONFIG.HEAD_SIZE;
 
@@ -269,8 +273,10 @@ public class SEND implements MSG_interface {
             ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq());
             ack.send();
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
+            int i;
+            for (i = 0; i < data.length && data[i] != (byte) 0; i++);
             if( last == null || !Arrays.equals(last, data)){
-              file.add(data);
+              file.add(Arrays.copyOfRange(data, 0, i));
               last = data.clone();
             }
 
