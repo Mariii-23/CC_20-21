@@ -168,6 +168,7 @@ public class GET implements MSG_interface {
         ack.received();
         ackFail = true;
       } catch (TimeOutMsgException | AckErrorException e) {
+        packet.setPort(port);
         socket.send(packet);
         //continue;
       } catch (PackageErrorException e1) {

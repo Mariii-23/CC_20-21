@@ -1,6 +1,7 @@
 package module.MsgType;
 
 
+import control.ControlMsgWithChangePorts;
 import control.SeqPedido;
 
 import module.Constantes;
@@ -8,6 +9,7 @@ import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
 import module.MSG_interface;
+import module.SendMSGwithChangePorts;
 import module.Status.Directory;
 import module.Status.FileStruct;
 
@@ -314,10 +316,6 @@ public class List implements MSG_interface {
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
     Queue<byte[]> metadata = new LinkedList<>();
-    //TODO ELiminar se virmos q tal
-    //primeiro pacote sera dado pelo control
-    //TODO hummm
-    System.out.println("Pacote dado:   " + MSG_interface.getDataMsg(packet));
     metadata.add(MSG_interface.getDataMsg(packet));
 
     int i =0;
@@ -343,7 +341,6 @@ public class List implements MSG_interface {
         }
       }
     }
-    System.out.println("Acabei");
     StringBuilder sb = new StringBuilder();
     while (!metadata.isEmpty()) {
       String aux = toData(metadata.remove());
@@ -354,8 +351,45 @@ public class List implements MSG_interface {
     ArrayList<String> filesToReceive = dir.compareDirectories(hf);
     if (filesToReceive!= null)
       System.out.println("files to receive: " + filesToReceive);
-    else
-      System.out.println("RII algo de errado aconteceu mierda");
+    // TODO pedir os files
+    var portaPrincipal = Constantes.CONFIG.PORT_UDP;
+    LinkedList<Thread> threads = new LinkedList<>();
+    if (filesToReceive!=null)
+    for (var elem: filesToReceive){
+        FileStruct file = new FileStruct(new File(elem));
+        GET getMsg = new GET(clientIP,portaPrincipal,socket,controlSeqPedido,file,path);
+        ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(controlSeqPedido,getMsg,clientIP,portaPrincipal);
+        SendMSGwithChangePorts t = new SendMSGwithChangePorts(msg);
+        
+        threads.add(new Thread(t));
+        t.sendFirst();
+    }
+    
+    for (var elem : threads )
+      elem.start();
+
+    for (var elem : threads )
+      try {
+        elem.join();
+      } catch (Exception ignored) {};
+    //  FileStruct file = new FileStruct(new File("ola"));
+    //  GET getMsg = new GET(clientIP,port,socket,seqPedido,file,pathDir);
+    //  ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,getMsg,clientIP,port);
+
+    //  FileStruct file1 = new FileStruct(new File("text"));
+    //  GET getMsg1 = new GET(clientIP,port,socket,seqPedido,file1,pathDir);
+    //  ControlMsgWithChangePorts msg1 = new ControlMsgWithChangePorts(seqPedido,getMsg1,clientIP,port);
+    //  SendMSGwithChangePorts t1 = new SendMSGwithChangePorts(msg);
+    //  SendMSGwithChangePorts t2 = new SendMSGwithChangePorts(msg1);
+
+    //  ////testar mandar file
+    //    Thread t[] = new Thread[2];
+    //      t[0] = new Thread(t1);
+    //      t[1] = new Thread(t2);
+    //      t1.sendFirst();
+    //      t2.sendFirst();
+    //      t[0].start();
+    //      t[1].start();
   }
 
   public static String toString(DatagramPacket packet){

@@ -11,6 +11,7 @@ import java.io.*;
 
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -89,6 +90,8 @@ public class SEND implements MSG_interface {
     for (; i2 < info.length && i < Constantes.CONFIG.BUFFER_SIZE ; i++,i2++ ){
       buff[i] = info[i2];
     }
+    for( ; i < Constantes.CONFIG.BUFFER_SIZE; i++)
+      buff[i] = (byte) 0;
   }
 
   public DatagramPacket createPacket() {
@@ -236,6 +239,10 @@ public class SEND implements MSG_interface {
       ack.send();
     } catch (Exception e){
     }
+    try {
+      socket.receive(null);
+      ack.send();
+    } catch (SocketTimeoutException ignored) {};
   }
 
   @Override
@@ -247,21 +254,26 @@ public class SEND implements MSG_interface {
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
     Queue<byte[]> file = new LinkedList<>();
-    int i =0;
+    byte last[] = null;
     while (!fileReceved) {
       segFileReceved = false;
       while (!segFileReceved){
+        ACK ack = null;
         try {
           socket.receive(receivedPacket);
-          i++;
+
           segFileReceved = validType(receivedPacket);
           if (segFileReceved) {
             System.out.print("RECEBI: ");
             MSG_interface.printMSG(receivedPacket);
-            ACK ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq());
+            ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq());
             ack.send();
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
-            file.add(data);
+            if( last == null || !Arrays.equals(last, data)){
+              file.add(data);
+              last = data.clone();
+            }
+
           } else {
             fileReceved = true;
             break;
@@ -269,6 +281,8 @@ public class SEND implements MSG_interface {
         } catch (SocketTimeoutException e){
           //System.out.println("acabei");
           //return;
+          ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq());
+          ack.send();
           continue;
         }
       }

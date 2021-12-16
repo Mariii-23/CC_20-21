@@ -13,6 +13,7 @@ import module.Status.FileStruct;
 import java.io.File;
 import java.io.IOException;
 import java.net.*;
+import java.util.LinkedList;
 
 public class Communication implements Runnable{
 
@@ -51,8 +52,9 @@ public class Communication implements Runnable{
         DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
         try {
           int i =0;
-          Thread thread[] = new Thread[2];
-          while ( i < 2){
+          //Thread thread[] = new Thread[2];
+          LinkedList<Thread> thread = new LinkedList<>();
+          while ( true){
             try {
               socket.receive(receivedPacket);
               //System.out.println("RECEBI:");
@@ -71,12 +73,20 @@ public class Communication implements Runnable{
             //System.out.println("Received");
             SendMSGwithChangePorts t = new SendMSGwithChangePorts(msg);
 
-            thread[i] = new Thread(t);
-            thread[i].start();
-            i++;
+            var n = new Thread(t);
+            thread.add(n);
+            n.start();
+            //thread[i] = new Thread(t);
+            //thread[i].start();
+            //i++;
           }
-          thread[0].join();
-          thread[1].join();
+
+          //TODO mudar o true pra outra cena
+          //for (var elem : thread)
+          //elem.join();
+
+          //thread[0].join();
+          //thread[1].join();
 
         } catch (IOException ex) {
           ex.printStackTrace();
@@ -85,8 +95,6 @@ public class Communication implements Runnable{
         } catch (PackageErrorException e) {
           e.printStackTrace();
         } catch (AckErrorException e) {
-          e.printStackTrace();
-        } catch (InterruptedException e) {
           e.printStackTrace();
         }
     } catch (SocketTimeoutException e){
@@ -111,9 +119,59 @@ public class Communication implements Runnable{
           System.out.println("HEHEHHEHE");
           e1.printStackTrace();
         }
-        /////////////////////////////
 
-      //  FileStruct file = new FileStruct(new File("ola"));
+        /////////////////////////////
+        byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
+        DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
+        try {
+          int i =0;
+          //Thread thread[] = new Thread[2];
+          LinkedList<Thread> thread = new LinkedList<>();
+          while ( true){
+            try {
+              socket.receive(receivedPacket);
+              //System.out.println("RECEBI:");
+              //MSG_interface.printMSG(receivedPacket);
+            } catch (SocketTimeoutException ignored) {
+              //e.printStackTrace();
+              continue;
+            }
+
+            //System.out.println("recebi e vou fazer o received");
+            byte[] dados = receivedPacket.getData().clone();
+            DatagramPacket p = new DatagramPacket(dados,dados.length,receivedPacket.getAddress(),receivedPacket.getPort());
+            var msg1 = new ControlMsgWithChangePorts(seqPedido,clientIP, pathDir,p);
+            System.out.println("EU sei q recebi isto algo no principal");
+            //MSG_interface.printMSG(p);
+            //System.out.println("Received");
+            SendMSGwithChangePorts t = new SendMSGwithChangePorts(msg1);
+
+            var n = new Thread(t);
+            thread.add(n);
+            n.start();
+            //thread[i] = new Thread(t);
+            //thread[i].start();
+            //i++;
+          }
+
+          //TODO mudar o true pra outra cena
+          //for (var elem : thread)
+          //elem.join();
+
+          //thread[0].join();
+          //thread[1].join();
+
+        } catch (IOException ex) {
+          ex.printStackTrace();
+        } catch (TimeOutMsgException e1) {
+          e1.printStackTrace();
+        } catch (PackageErrorException e1) {
+          e1.printStackTrace();
+        } catch (AckErrorException e1) {
+          e1.printStackTrace();
+        }
+
+        //  FileStruct file = new FileStruct(new File("ola"));
       //  GET getMsg = new GET(clientIP,port,socket,seqPedido,file,pathDir);
       //  ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,getMsg,clientIP,port);
 

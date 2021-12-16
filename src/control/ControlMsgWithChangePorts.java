@@ -25,7 +25,7 @@ public class ControlMsgWithChangePorts implements Runnable{
     this.socket = new DatagramSocket(0);
     this.clientPort = packet.getPort();
     this.msg_interface = MSG_interface.createMsg(packet,socket,seqPedido,dir);
-    System.out.println("Tou na porta " + socket.getLocalPort());
+    //System.out.println("Tou na porta " + socket.getLocalPort());
   }
 
   public ControlMsgWithChangePorts(SeqPedido seqPedido, MSG_interface msg, InetAddress clientIP, int clientPort) throws SocketException {
@@ -35,7 +35,7 @@ public class ControlMsgWithChangePorts implements Runnable{
     this.clientIP = clientIP;
     this.socket = new DatagramSocket(0);
     this.clientPort =clientPort;
-    System.out.println("Tou na porta " + socket.getLocalPort());
+    //System.out.println("Tou na porta " + socket.getLocalPort());
   }
 
   public void sendFirst() throws IOException {
@@ -49,7 +49,7 @@ public class ControlMsgWithChangePorts implements Runnable{
       System.out.println("RECEBI: ");
       System.out.println(msg_interface.toString());
 
-      System.out.println("Vou mandar o ack para a porta " + clientPort);
+      //System.out.println("Vou mandar o ack para a porta " + clientPort);
       ACK ack;
       try {
         ack = new ACK(msg_interface.getPacket(),clientPort,socket,clientIP,seqPedido.getSeq());
@@ -70,6 +70,7 @@ public class ControlMsgWithChangePorts implements Runnable{
       } catch (IOException e) {
         e.printStackTrace();
       } catch (TimeOutMsgException e) {
+        //msg_interface.received();
         e.printStackTrace();
       } catch (PackageErrorException e) {
         e.printStackTrace();
@@ -79,15 +80,12 @@ public class ControlMsgWithChangePorts implements Runnable{
 
     } else {
       try {
-        //System.out.println("vou receber o ficheiro");
-        System.out.println("Mandar o list");
         msg_interface.send(socket);
       } catch (IOException e) {
         e.printStackTrace();
       } catch (PackageErrorException e) {
         e.printStackTrace();
       }
-      //System.out.println(msg_interface);
     }
     this.socket.close();
   }
