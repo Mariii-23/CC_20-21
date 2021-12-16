@@ -57,6 +57,7 @@ public class List implements MSG_interface {
     this.controlSeqPedido = seq;
     this.serverSocket = new DatagramSocket();
     this.path = path;
+    this.dir = new Directory(new File(path));
   }
 
   public void setSocket(DatagramSocket socket) {
