@@ -21,6 +21,8 @@ public interface MSG_interface {
   DatagramPacket getPacket();
   void setSocket(DatagramSocket socket);
 
+  void sendFirst(DatagramSocket socket) throws IOException;
+
   default byte getSeq(DatagramPacket packet) {
     return packet.getData()[1];
   }
@@ -113,6 +115,9 @@ public interface MSG_interface {
       case (byte) 1:
         msg_interface = new ACK(packet,socket.getLocalPort(),socket,packet.getAddress(),seq.getSeq());
         break;
+      case (byte) 4:
+        msg_interface = new List(packet,socket.getLocalPort(),socket,seq,dir);
+        break;
       case (byte) 5:
         msg_interface = new GET(packet,packet.getAddress(),socket.getLocalPort(),socket,seq,dir);
         break;
@@ -135,6 +140,8 @@ public interface MSG_interface {
       case (byte) 1:
         msg_interface = new ACK(packet,socket.getLocalPort(),socket,socket.getInetAddress(),seq.getSeq());
         break;
+      case (byte) 4:
+        msg_interface = new List(packet,socket.getLocalPort(),socket,seq,dir);
       case (byte) 5:
         msg_interface = new GET(packet,socket.getInetAddress(),socket.getLocalPort(),socket,seq,dir);
         break;

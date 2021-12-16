@@ -1,5 +1,6 @@
 package module;
 
+import control.ControlMsgWithChangePorts;
 import control.SeqPedido;
 import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
@@ -40,29 +41,54 @@ public class Communication implements Runnable{
         // foi o q mandou o hi
 
         // receber o ls
-      List getMsg = new List(port, clientIP, socket, seqPedido, pathDir);
+      //List getMsg = new List(port, clientIP, socket, seqPedido, pathDir);
       //testtar receber file
       //SEND getMsg = new SEND(clientIP,port,socket,++seq,"text2",pathDir);
-      getMsg.received();
+      //getMsg.received();
 
+      // meu
+        byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
+        DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
+        try {
+          int i =0;
+          Thread thread[] = new Thread[2];
+          while ( i < 2){
+            try {
+              socket.receive(receivedPacket);
+              //System.out.println("RECEBI:");
+              //MSG_interface.printMSG(receivedPacket);
+            } catch (SocketTimeoutException e) {
+              //e.printStackTrace();
+              continue;
+            }
 
-        //byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
-        //DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
-        //try {
-        //  socket.receive(receivedPacket);
-          //System.out.println("Recebi algo do ip -> " + clientIP);
-        //  ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,clientIP, pathDir,receivedPacket);
-        //  msg.run();
+            //System.out.println("recebi e vou fazer o received");
+            byte[] dados = receivedPacket.getData().clone();
+            DatagramPacket p = new DatagramPacket(dados,dados.length,receivedPacket.getAddress(),receivedPacket.getPort());
+            var msg = new ControlMsgWithChangePorts(seqPedido,clientIP, pathDir,p);
+            System.out.println("EU sei q recebi isto algo no principal");
+            //MSG_interface.printMSG(p);
+            //System.out.println("Received");
+            SendMSGwithChangePorts t = new SendMSGwithChangePorts(msg);
 
-        //} catch (IOException ex) {
-        //  ex.printStackTrace();
-        //} catch (TimeOutMsgException e) {
-        //  e.printStackTrace();
-        //} catch (PackageErrorException e) {
-        //  e.printStackTrace();
-        //} catch (AckErrorException e) {
-        //  e.printStackTrace();
-        //}
+            thread[i] = new Thread(t);
+            thread[i].start();
+            i++;
+          }
+          thread[0].join();
+          thread[1].join();
+
+        } catch (IOException ex) {
+          ex.printStackTrace();
+        } catch (TimeOutMsgException e) {
+          e.printStackTrace();
+        } catch (PackageErrorException e) {
+          e.printStackTrace();
+        } catch (AckErrorException e) {
+          e.printStackTrace();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
     } catch (SocketTimeoutException e){
       try {
         confirmarConecao();
@@ -75,29 +101,49 @@ public class Communication implements Runnable{
 ////////////////////
 
         /////////// JORGE ////////////////
-        List getMsg = new List(port, clientIP, socket, seqPedido, pathDir);
+        List getMsg3 = new List(port, clientIP, socket, seqPedido, pathDir);
+        ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,getMsg3,clientIP,port);
         try {
-          getMsg.send();
-        } catch (PackageErrorException e2){
-          e2.printStackTrace();
+          //getMsg3.send();
+          System.out.println("Vou mandar o list");
+          msg.run();
         } catch (Exception e1){
           System.out.println("HEHEHHEHE");
           e1.printStackTrace();
         }
         /////////////////////////////
 
+      //  FileStruct file = new FileStruct(new File("ola"));
+      //  GET getMsg = new GET(clientIP,port,socket,seqPedido,file,pathDir);
+      //  ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,getMsg,clientIP,port);
 
-      } catch (IOException e1){
-        e1.printStackTrace();
+      //  FileStruct file1 = new FileStruct(new File("text"));
+      //  GET getMsg1 = new GET(clientIP,port,socket,seqPedido,file1,pathDir);
+      //  ControlMsgWithChangePorts msg1 = new ControlMsgWithChangePorts(seqPedido,getMsg1,clientIP,port);
+      //  SendMSGwithChangePorts t1 = new SendMSGwithChangePorts(msg);
+      //  SendMSGwithChangePorts t2 = new SendMSGwithChangePorts(msg1);
+
+      //  ////testar mandar file
+      //    Thread t[] = new Thread[2];
+      //      t[0] = new Thread(t1);
+      //      t[1] = new Thread(t2);
+      //      t1.sendFirst();
+      //      t2.sendFirst();
+      //      t[0].start();
+      //      t[1].start();
+
+      //      t[0].join();
+      //} catch (IOException | InterruptedException | PackageErrorException | TimeOutMsgException e1){
+      //  e1.printStackTrace();
+      //}
+      }catch (Exception e3){
+        e3.printStackTrace();
       }
+
     } catch (IOException ioException) {
       ioException.printStackTrace();
-    } catch (AckErrorException e) {
-      e.printStackTrace();
-    } catch (PackageErrorException e) {
-      e.printStackTrace();
-    } catch (TimeOutMsgException e) {
-      e.printStackTrace();
+    } catch (Exception e1) {
+      e1.printStackTrace();
     }
 
   }

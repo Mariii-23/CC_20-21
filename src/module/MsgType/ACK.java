@@ -96,6 +96,12 @@ public class ACK implements MSG_interface {
   }
 
   @Override
+  public void sendFirst(DatagramSocket socket) throws IOException {
+    var packet = createPacket(seqPedido,seq);
+    socket.send(packet);
+  }
+
+  @Override
   public void send(DatagramSocket socket) throws IOException, PackageErrorException {
     var packet = createPacket(seqPedido,seq);
     socket.send(packet);

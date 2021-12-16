@@ -48,6 +48,8 @@ public class Directory {
   }
 
   public ArrayList<String> compareDirectories(HashMap<String, FileStruct> files) {
+    if (files == null || files.isEmpty())
+      return null;
     ArrayList<String> filesReceived = new ArrayList<>();
     for (FileStruct fs: files.values()) {
       if (this.files.containsKey(fs.name)) {

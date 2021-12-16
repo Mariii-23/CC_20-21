@@ -26,7 +26,7 @@ public class GET implements MSG_interface {
   private final Type type = Type.Get;
 
   private FileStruct file;
-  private final DatagramPacket packet;
+  private DatagramPacket packet;
 
 
   public GET(InetAddress clientIp, int port, DatagramSocket socket, SeqPedido seqPedido, FileStruct file, String dir) {
@@ -150,12 +150,18 @@ public class GET implements MSG_interface {
   }
 
 
-  @Override
-  public void send(DatagramSocket socket) throws IOException, PackageErrorException {
+  public void sendFirst(DatagramSocket socket) throws IOException {
     DatagramPacket packet = createPacket();
     socket.send(packet);
+    this.packet = packet;
+  }
 
-    ACK ack = new ACK(packet,port,socket,clientIP,seq);
+  @Override
+  public void send(DatagramSocket socket) throws IOException, PackageErrorException {
+    //DatagramPacket packet = createPacket();
+    //socket.send(packet);
+    // TODO o packet é nulo porque tenho q lho dar
+    ACK ack = new ACK(this.packet,port,socket,clientIP,seq);
     boolean ackFail = false;
     while (!ackFail) {
       try {

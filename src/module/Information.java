@@ -8,11 +8,11 @@ public class Information {
   private ReentrantLock l;
   private boolean terminated;
 
-  private SeqPedido seqPedido;
+  //private SeqPedido seqPedido;
 
   public Information() {
     this.l = new ReentrantLock();
-    this.seqPedido = new SeqPedido();
+    //this.seqPedido = new SeqPedido();
     this.terminated = false;
   }
 
@@ -29,11 +29,11 @@ public class Information {
     return this.terminated;
   }
 
-  public byte getNexPedido(){
-    return seqPedido.getSeq();
-  }
+  //public byte getNexPedido(){
+  //  return seqPedido.getSeq();
+  //}
 
-  public void changeBytePedido(byte seq) {
-    this.seqPedido = new SeqPedido(seq);
-  }
+  //public void changeBytePedido(byte seq) {
+  //  this.seqPedido = new SeqPedido(seq);
+  //}
 }

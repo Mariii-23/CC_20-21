@@ -35,6 +35,7 @@ public class List implements MSG_interface {
   Byte seqPedido;
   Byte seq = (byte) 0;
   Queue<byte[]> qb;
+  Queue<DatagramPacket> packets;
 
 
   public List(int port, InetAddress clientIP, DatagramSocket socket, SeqPedido seq, String path) throws SocketException {
@@ -98,13 +99,12 @@ public class List implements MSG_interface {
       buff[i] = (byte) 0;
   }
 
-  public Queue<DatagramPacket> createPackets() {
+  public void createPackets() {
     this.seqPedido = controlSeqPedido.getSeq();
     //TODO depois verificar o que acontece quando a pasta nao tem ficheiros
-    Queue<DatagramPacket> list = new LinkedList<>();
+    this.packets = new LinkedList<>();
     for (var i =0; i < qb.size(); i++)
-      list.add(createPacket());
-    return list;
+      packets.add(createPacket());
   }
 
   //@Override
@@ -115,7 +115,7 @@ public class List implements MSG_interface {
   }
 
   public void putData() {
-    Queue<byte[]> qb = new LinkedList<>();
+    this.qb = new LinkedList<>();
     File dir = new File(path);
     StringBuilder sb = new StringBuilder();
     for (File f : dir.listFiles()) {
@@ -127,14 +127,13 @@ public class List implements MSG_interface {
     for (int i = 0; i < nrP; i++) {
       qb.add(Arrays.copyOfRange(b, i * Constantes.CONFIG.TAIL_SIZE, (i+1) * Constantes.CONFIG.TAIL_SIZE));
     }
-    this.qb = qb;
   }
 
   @Override
   public void send() throws IOException, PackageErrorException {
     //TODO
     putData();
-    Queue<DatagramPacket> packets = createPackets();
+    createPackets();
     if (packets.isEmpty()) {
       System.out.println("Nao mandei nenhum ficheiro");
       //TODO Acrescentar cenas ou mudar
@@ -188,10 +187,10 @@ public class List implements MSG_interface {
   }
 
   @Override
-  public void send(DatagramSocket socket) throws IOException, PackageErrorException {
-    //TODO
+  public void sendFirst(DatagramSocket socket) throws IOException {
     putData();
-    Queue<DatagramPacket> packets = createPackets();
+    createPackets();
+
     if (packets.isEmpty()) {
       System.out.println("Nao mandei nenhum ficheiro");
       //TODO Acrescentar cenas ou mudar
@@ -199,9 +198,51 @@ public class List implements MSG_interface {
       return;
     }
 
+    DatagramPacket elem = packets.remove();
+    System.out.println("mandar o 1 list");
+    socket.send(elem);
+
+    ACK ack = new ACK(elem,port,socket,clientIP,seqPedido); seqPedido++;
+    boolean ackSuccesses = false;
+    int ackError=0;
+    int packageError=0;
+    int timeOutError=0;
+    while (!ackSuccesses) {
+      try {
+        ack.received();
+        port = ack.getPort();
+        ackSuccesses = true;
+      } catch (TimeOutMsgException e) {
+        if (timeOutError>5)
+          break;
+        timeOutError++;
+        // TODO controlo de fluxo
+        // vamos diminuindo o tempo de receber cenas
+        socket.send(elem);
+        //continue;
+      } catch (PackageErrorException e1) {
+        // TODO controlo de fluxo
+        // a partir de x pacotes errados, fechamos a conecao
+        if (packageError > 3) break;
+        packageError++;
+        socket.send(elem);
+        //continue;
+      } catch (AckErrorException e2) {
+        if (ackError>3) break;
+        ackError++;
+        socket.send(elem);
+      }
+    }
+  }
+
+  @Override
+  public void send(DatagramSocket socket) throws IOException, PackageErrorException {
+    //TODO
+    sendFirst(socket);
     while(!(packets.isEmpty())){
       DatagramPacket elem = packets.remove();
       //MSG_interface.printMSG(elem);
+      elem.setPort(port);
       socket.send(elem);
       ACK ack = new ACK(elem,port,socket,clientIP,seqPedido); seqPedido++;
       boolean ackFail = false;
@@ -234,7 +275,6 @@ public class List implements MSG_interface {
         }
       }
       if (ackError>3 || packageError>3 || timeOutError>5) break;
-
     }
 
     //TODO MUDAR
@@ -253,6 +293,8 @@ public class List implements MSG_interface {
   }
 
   public HashMap<String, FileStruct> createFileMap(String data) {
+    if (data == null || data.isEmpty())
+      return null;
     HashMap<String, FileStruct> hf = new HashMap<>();
     String[] meta = data.split(";;");
     for (int i = 0; i < meta.length; i = i+2) {
@@ -271,6 +313,12 @@ public class List implements MSG_interface {
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
     Queue<byte[]> metadata = new LinkedList<>();
+    //TODO ELiminar se virmos q tal
+    //primeiro pacote sera dado pelo control
+    //TODO hummm
+    System.out.println("Pacote dado:   " + MSG_interface.getDataMsg(packet));
+    metadata.add(MSG_interface.getDataMsg(packet));
+
     int i =0;
     while (!fileReceved) {
       segFileReceved = false;
@@ -294,6 +342,7 @@ public class List implements MSG_interface {
         }
       }
     }
+    System.out.println("Acabei");
     StringBuilder sb = new StringBuilder();
     while (!metadata.isEmpty()) {
       String aux = toData(metadata.remove());
@@ -302,12 +351,20 @@ public class List implements MSG_interface {
 
     HashMap<String, FileStruct> hf = createFileMap(sb.toString());
     ArrayList<String> filesToReceive = dir.compareDirectories(hf);
-    System.out.println("files to receive: " + filesToReceive);
+    if (filesToReceive!= null)
+      System.out.println("files to receive: " + filesToReceive);
+    else
+      System.out.println("RII algo de errado aconteceu mierda");
   }
 
   public static String toString(DatagramPacket packet){
     byte[] msg = packet.getData();
-    return  "[List]  -> SEQ:" + msg[1] + "; SEG: " +msg[2] + "; MSG: Metadados";
-          //  + new String(MSG_interface.getDataMsg(packet));
+    return  "[List]  -> SEQ:" + msg[1] + "; SEG: " +msg[2] + "; MSG: " //Metadados";
+            + new String(MSG_interface.getDataMsg(packet));
+  }
+
+  @Override
+  public String toString() {
+    return toString(packet);
   }
 }

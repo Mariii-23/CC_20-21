@@ -91,8 +91,15 @@ public class HI implements MSG_interface {
     return  msg[0] == Type.Hi.getBytes();
   }
 
+  public void sendFirst(DatagramSocket socket) throws IOException {
+    var sendPackage = createPacket(seqPedido.getSeq(),seq);
+    socket.send(sendPackage);
+    seq++;
+  }
+
   public void send() throws IOException, PackageErrorException {
 
+    //TODO mudar esta parte
     var sendPackage = createPacket(seqPedido.getSeq(),seq);
     socket.send(sendPackage);
     seq++;

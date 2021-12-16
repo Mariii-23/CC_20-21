@@ -107,6 +107,10 @@ public class SEND implements MSG_interface {
     return list;
   }
 
+  public void sendFirst(DatagramSocket socket){
+   //TODO
+  }
+
   @Override
   public void send() throws IOException, PackageErrorException {
     this.seqPedido = controlSeqPedido.getSeq();
@@ -130,9 +134,9 @@ public class SEND implements MSG_interface {
           ack.received();
           ackFail = true;
         } catch (TimeOutMsgException e) {
+          timeOutError++;
           if (timeOutError>5)
             break;
-          timeOutError++;
           // TODO controlo de fluxo
           // vamos diminuindo o tempo de receber cenas
           socket.send(elem);
