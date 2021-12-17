@@ -50,8 +50,8 @@ public class ReceveidAndTreat implements Runnable {
 
         byte[] dados = receivedPacket.getData().clone();
         DatagramPacket p = new DatagramPacket(dados,dados.length,receivedPacket.getAddress(),receivedPacket.getPort());
-        var msg = new ControlMsgWithChangePorts(seqPedido,clientIP, pathDir,p);
-        System.out.println("EU sei q recebi isto algo no principal");
+        var msg = new ControlMsgWithChangePorts(seqPedido,clientIP, pathDir,p, status);
+        //System.out.println("EU sei q recebi isto algo no principal");
         SendMSGwithChangePorts t = new SendMSGwithChangePorts(msg);
 
         var n = new Thread(t);

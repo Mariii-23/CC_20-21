@@ -3,6 +3,7 @@ package control;
 import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
+import module.Information;
 import module.MSG_interface;
 import module.MsgType.ACK;
 
@@ -18,13 +19,15 @@ public class ControlMsgWithChangePorts implements Runnable{
   private final int clientPort;
   private final SeqPedido seqPedido;
 
-  public ControlMsgWithChangePorts(SeqPedido seqPedido, InetAddress clientIP, String dir, DatagramPacket packet) throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
+  public ControlMsgWithChangePorts(SeqPedido seqPedido, InetAddress clientIP, String dir, DatagramPacket packet,
+                                   Information information) throws IOException,
+      TimeOutMsgException, PackageErrorException, AckErrorException {
     this.seqPedido = seqPedido;
     this.is_send = false;
     this.clientIP = clientIP;
     this.socket = new DatagramSocket(0);
     this.clientPort = packet.getPort();
-    this.msg_interface = MSG_interface.createMsg(packet,socket,seqPedido,dir);
+    this.msg_interface = MSG_interface.createMsg(packet,socket,seqPedido,dir,information);
     //System.out.println("Tou na porta " + socket.getLocalPort());
   }
 

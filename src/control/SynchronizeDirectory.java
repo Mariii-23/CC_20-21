@@ -43,7 +43,7 @@ public class SynchronizeDirectory implements Runnable{
 
   @Override
   public void run() {
-    System.out.println("Send first list");
+    //System.out.println("Send first list");
     sendList();
     while (!status.isTerminated()){
       try {

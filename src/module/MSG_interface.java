@@ -104,16 +104,21 @@ public interface MSG_interface {
     msg_interface.received();
   }
 
-  static MSG_interface createMsg(DatagramPacket packet, DatagramSocket socket,SeqPedido seq, String dir) throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
+  static MSG_interface createMsg(DatagramPacket packet, DatagramSocket socket,SeqPedido seq, String dir, Information information)
+      throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
     MSG_interface msg_interface;
     //TODO
     InetAddress clientIp = packet.getAddress();
+    int port = socket.getLocalPort();
     switch (getType(packet)) {
       case (byte) 0:
         msg_interface = new HI(packet,socket.getLocalPort(),socket, seq);
         break;
       case (byte) 1:
         msg_interface = new ACK(packet,socket.getLocalPort(),socket,packet.getAddress(),seq.getSeq());
+        break;
+      case (byte) 2:
+        msg_interface = new BYE(packet, clientIp,port,socket,seq,information);
         break;
       case (byte) 4:
         msg_interface = new List(packet,socket.getLocalPort(),socket,seq,dir);
