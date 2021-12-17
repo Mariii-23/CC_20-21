@@ -90,6 +90,7 @@ public class HttpHandler implements  AutoCloseable , Runnable{
   private void handleResponse(String method, String fileRequest) throws IOException {
     switch (method) {
       case "SEND" : handleGet(fileRequest);
+      case "GET" : handleGet(fileRequest);
       default : handleNotSupported();
     }
   }
