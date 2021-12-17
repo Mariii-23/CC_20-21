@@ -85,8 +85,8 @@ public class SEND implements MSG_interface {
 
     byte[] info = fileInBytes.remove();
 
-    int counter = 0;
-    System.out.println("counter: " + counter + "; info size: " + info.length + "; info: " + Arrays.toString(info));
+    //int counter = 0;
+    //System.out.println("counter: " + counter + "; info size: " + info.length + "; info: " + Arrays.toString(info));
 
     int i2=0;
     int i = Constantes.CONFIG.HEAD_SIZE;
