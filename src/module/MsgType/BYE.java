@@ -123,4 +123,13 @@ public class BYE implements MSG_interface {
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
     information.endProgram();
   }
+
+  public static String toString(DatagramPacket packet){
+    byte[] msg = packet.getData();
+    return  "[BYE]  -> SEQ: "+ msg[1] + "; SEG: " + msg[2];
+  }
+
+  public String toString() {
+    return toString(packet);
+  }
 }

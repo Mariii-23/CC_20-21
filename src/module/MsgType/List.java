@@ -9,7 +9,7 @@ import module.Exceptions.AckErrorException;
 import module.Exceptions.PackageErrorException;
 import module.Exceptions.TimeOutMsgException;
 import module.MSG_interface;
-import control.SendMSGwithChangePorts;
+import control.SendMSWithChangePorts;
 import module.Status.Directory;
 import module.Status.FileStruct;
 
@@ -202,7 +202,7 @@ public class List implements MSG_interface {
     }
 
     DatagramPacket elem = packets.remove();
-    System.out.println("mandar o 1 list");
+    //System.out.println("mandar o 1 list");
     socket.send(elem);
 
     ACK ack = new ACK(elem, port, socket, clientIP, seqPedido);
@@ -361,7 +361,7 @@ public class List implements MSG_interface {
         FileStruct file = new FileStruct(new File(elem));
         GET getMsg = new GET(clientIP, portaPrincipal, socket, controlSeqPedido, file, path);
         ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(controlSeqPedido, getMsg, clientIP, portaPrincipal);
-        SendMSGwithChangePorts t = new SendMSGwithChangePorts(msg);
+        SendMSWithChangePorts t = new SendMSWithChangePorts(msg);
 
         threads.add(new Thread(t));
         t.sendFirst();
@@ -376,6 +376,11 @@ public class List implements MSG_interface {
       } catch (Exception ignored) {
       }
     ;
+  }
+
+  @Override
+  public String toString() {
+    return toString(packet);
   }
 
   public static String toString(DatagramPacket packet) {

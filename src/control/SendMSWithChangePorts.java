@@ -1,13 +1,10 @@
 package control;
-
-import control.ControlMsgWithChangePorts;
-
 import java.io.IOException;
 
-public class SendMSGwithChangePorts implements Runnable{
+public class SendMSWithChangePorts implements Runnable{
   ControlMsgWithChangePorts controlMsgWithChangePorts;
 
-  public SendMSGwithChangePorts(ControlMsgWithChangePorts controlMsgWithChangePorts) {
+  public SendMSWithChangePorts(ControlMsgWithChangePorts controlMsgWithChangePorts) {
     this.controlMsgWithChangePorts = controlMsgWithChangePorts;
   }
 

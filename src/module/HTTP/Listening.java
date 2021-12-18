@@ -1,7 +1,8 @@
-package module;
+package module.HTTP;
 
-import com.sun.net.httpserver.HttpServer;
+import module.Constantes;
 import module.HTTP.HttpHandler;
+import module.Information;
 
 import java.io.*;
 import java.net.*;
@@ -9,8 +10,8 @@ import java.net.*;
 public class Listening implements Runnable {
 
   private final Information status;
-  private String pathDir;
-  private int port;
+  private final String pathDir;
+  private final int port;
 
   public Listening(Information status, String pathDir) throws IOException {
     this.status = status;
@@ -18,14 +19,9 @@ public class Listening implements Runnable {
     this.pathDir = pathDir;
   }
 
-
   @Override
   public void run() {
     try {
-
-      //TODO
-      // 1.  adicionar threads
-
       ServerSocket serverSocket = new ServerSocket(port);
       while (!status.isTerminated()) {
         // maybe por tempo assim quando terminamos o programa ele
@@ -39,7 +35,6 @@ public class Listening implements Runnable {
         } catch (InterruptedException e){
           System.out.println(e.toString());
         }
-
         //PrintWriter out_ = new PrintWriter(client.getOutputStream());
         //BufferedReader in_ = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
@@ -53,15 +48,8 @@ public class Listening implements Runnable {
         //  line = in_.readLine();
         //}
       }
-
-      //TODO no final
       serverSocket.close();
-    } catch (IOException e){
+    } catch (IOException ignored){
     }
   }
-
-  //public static void main(String[] args) throws IOException {
-  //  Listening l = new Listening("170.0.0.1","/home/mari");
-  //  l.run();
-  //}
 }

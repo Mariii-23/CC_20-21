@@ -52,7 +52,7 @@ public class ReceveidAndTreat implements Runnable {
         DatagramPacket p = new DatagramPacket(dados,dados.length,receivedPacket.getAddress(),receivedPacket.getPort());
         var msg = new ControlMsgWithChangePorts(seqPedido,clientIP, pathDir,p, status);
         //System.out.println("EU sei q recebi isto algo no principal");
-        SendMSGwithChangePorts t = new SendMSGwithChangePorts(msg);
+        SendMSWithChangePorts t = new SendMSWithChangePorts(msg);
 
         var n = new Thread(t);
         threads.add(n);

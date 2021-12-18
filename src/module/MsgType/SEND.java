@@ -108,6 +108,7 @@ public class SEND implements MSG_interface {
     if (readFile() != 0) return new LinkedList<>();
 
     Queue<DatagramPacket> list = new LinkedList<>();
+    //list.add(file)
     int len = fileInBytes.size();
     for (var i =0 ; i < len  ;i++)
       list.add(createPacket());
@@ -177,7 +178,7 @@ public class SEND implements MSG_interface {
     }
   }
 
-    public void writeFile(Queue<byte[]> array) throws IOException {
+    public void writeFile(Queue<byte[]> array, long lastModification) throws IOException {
       FileWriter myWriter = new FileWriter(dir+'/'+fileName);
 
       for(var data : array){
@@ -186,6 +187,8 @@ public class SEND implements MSG_interface {
       }
       myWriter.flush();
       myWriter.close();
+      File file = new File(dir+'/'+fileName);
+      file.setLastModified(lastModification);
   }
 
   public void send(DatagramSocket socket) throws IOException, PackageErrorException {
@@ -258,7 +261,9 @@ public class SEND implements MSG_interface {
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
     Queue<byte[]> file = new LinkedList<>();
-    byte last[] = null;
+    byte[] last = null;
+    boolean first = true;
+    long lastModification =0;
     while (!fileReceved) {
       segFileReceved = false;
       while (!segFileReceved){
@@ -273,6 +278,14 @@ public class SEND implements MSG_interface {
             ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq());
             ack.send();
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
+            if(first){
+              int i;
+              for (i = 0; i < data.length && data[i] != (byte) 0; i++);
+              lastModification = Long.parseLong(new String(Arrays.copyOfRange(data, 0, i)
+                  ,StandardCharsets.UTF_8));
+              first = false;
+              continue;
+            }
             int i;
             for (i = 0; i < data.length && data[i] != (byte) 0; i++);
             if( last == null || !Arrays.equals(last, data)){
@@ -289,12 +302,11 @@ public class SEND implements MSG_interface {
           //return;
           ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq());
           ack.send();
-          continue;
         }
       }
     }
     if (!file.isEmpty()){
-      writeFile(file);
+      writeFile(file,lastModification);
     }
   }
 
@@ -302,15 +314,20 @@ public class SEND implements MSG_interface {
   public int readFile() {
     this.fileInBytes = new LinkedList<>();
     FileInputStream in;
+    File file ;
     try {
       in = new FileInputStream(dir+ '/' + fileName);
+      file= new File(dir+'/'+fileName);
     } catch (FileNotFoundException e){
       System.out.println("File not found Exception->  "+ dir+'/'+fileName+"|");
       System.out.println(e.getMessage());
       return -1;
     }
     int size = Constantes.CONFIG.TAIL_SIZE;
+    // mandar o tamanho
     byte[] buff = new byte[size];
+    fileInBytes.add(Long.toString(file.lastModified()).getBytes(StandardCharsets.UTF_8));
+
     int sizeRead=0;
     try {
       while (-1 != (sizeRead =in.read(buff))){

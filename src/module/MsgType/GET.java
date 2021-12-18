@@ -193,24 +193,6 @@ public class GET implements MSG_interface {
 
   @Override
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
-    //byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
-    //DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
-    //boolean receivedRightPacket = false;
-    //int errors = -1;
-    //while ( !receivedRightPacket && errors < 3 ){
-      //errors++;
-      //socket.receive(receivedPacket);
-      //System.out.print("RECEBI: ");
-      //MSG_interface.printMSG(receivedPacket);
-      //receivedRightPacket = validType(receivedPacket);
-    //}
-    //receivedRightPacket = validType(packet);
-    //System.out.print("RECEBI: ");
-    //MSG_interface.printMSG(packet);
-
-    //ACK ack = new ACK(packet,port,socket,clientIP,SeqPedido); SeqPedido++;
-    //ack.send();
-    //atualizaFileName(receivedPacket);
     String filename = getFilename(packet);
 
     if (filename == null){

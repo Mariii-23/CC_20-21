@@ -35,72 +35,14 @@ public class Communication implements Runnable{
   private void connect() {
     try {
         iniciarConecao();
-        // foi o q mandou o hi
-
-        // receber o ls
-      //List getMsg = new List(port, clientIP, socket, seqPedido, pathDir);
-      //testtar receber file
-      //SEND getMsg = new SEND(clientIP,port,socket,++seq,"text2",pathDir);
-      //getMsg.received();
-
-      ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status,socket,pathDir,clientIP,seqPedido);
-      SynchronizeDirectory synchronizeDirectory =
-          new SynchronizeDirectory(status,socket,pathDir,clientIP,port,seqPedido);
-      Thread[] threads = new Thread[2];
-      threads[0] = new Thread(receveidAndTreat);
-      threads[1] = new Thread(synchronizeDirectory);
-      threads[0].start();
-      threads[1].start();
-      threads[0].join();
-      threads[1].join();
-
-      //ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status,socket,pathDir,clientIP,seqPedido);
-      //Thread[] threads = new Thread[2];
-      //threads[0] = new Thread(receveidAndTreat);
-      //threads[0].start();
-      //threads[0].join();
-
     } catch (SocketTimeoutException e){
       try {
         confirmarConecao();
-
- //////////////// Mandar 1 file
-        //FileStruct file = new FileStruct(new File("text"));
-        //GET getMsg = new GET(clientIP,port,socket,seqPedido,file,pathDir);
-        //ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,getMsg,clientIP,port);
-        //msg.run();
-////////////////////
-
-        /////////// JORGE ////////////////
-        //List getMsg3 = new List(port, clientIP, socket, seqPedido, pathDir);
-        //ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(seqPedido,getMsg3,clientIP,port);
-        //try {
-        //  //getMsg3.send();
-        //  System.out.println("Vou mandar o list");
-        //  msg.run();
-        //} catch (Exception e1){
-        //  System.out.println("HEHEHHEHE");
-        //  e1.printStackTrace();
-        //}
-
-        ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status,socket,pathDir,clientIP,seqPedido);
-        SynchronizeDirectory synchronizeDirectory =
-            new SynchronizeDirectory(status,socket,pathDir,clientIP,port,seqPedido);
-        Thread[] threads = new Thread[2];
-        threads[0] = new Thread(receveidAndTreat);
-        threads[1] = new Thread(synchronizeDirectory);
-        threads[0].start();
-        threads[1].start();
-        threads[0].join();
-        threads[1].join();
-
       }catch (Exception e3){
         e3.printStackTrace();
       }
-    } catch (IOException ioException) {
+    } catch (Exception ioException) {
       ioException.printStackTrace();
-    } catch (Exception e1) {
-      e1.printStackTrace();
     }
   }
 
@@ -130,7 +72,22 @@ public class Communication implements Runnable{
   @Override
   public void run() {
     connect();
-    status.endProgram();
+    ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status,socket,pathDir,clientIP,seqPedido);
+    SynchronizeDirectory synchronizeDirectory =
+        new SynchronizeDirectory(status,socket,pathDir,clientIP,port,seqPedido);
+    Thread[] threads = new Thread[2];
+    threads[0] = new Thread(receveidAndTreat);
+    threads[1] = new Thread(synchronizeDirectory);
+    threads[0].start();
+    threads[1].start();
+    try {
+      threads[0].join();
+      threads[1].join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    //status.endProgram();
+    close();
   }
 
   public void close() {
