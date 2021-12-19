@@ -1,10 +1,10 @@
-package module.Exceptions;
+package module.exceptions;
 
 /**
  * Esta excepção será lançada no caso de ser definido um dado tempo para a receção de uma dada msg,
  * e essa mesma não ser recebida antes do tempo previsto.
  */
-public class TimeOutMsgException extends Exception{
+public class TimeOutMsgException extends Exception {
   public TimeOutMsgException() {
     super();
   }

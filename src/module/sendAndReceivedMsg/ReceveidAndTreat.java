@@ -1,10 +1,13 @@
-package control;
+package module.sendAndReceivedMsg;
 
+import control.SendMSWithChangePorts;
 import module.Constantes;
-import module.Exceptions.AckErrorException;
-import module.Exceptions.PackageErrorException;
-import module.Exceptions.TimeOutMsgException;
-import module.Information;
+import module.exceptions.AckErrorException;
+import module.exceptions.PackageErrorException;
+import module.exceptions.TimeOutMsgException;
+import module.log.Log;
+import module.status.Information;
+import module.status.SeqPedido;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -16,6 +19,7 @@ import java.util.LinkedList;
 public class ReceveidAndTreat implements Runnable {
 
   private final Information status;
+  private final Log log;
   private final DatagramSocket socket;
   //private ReentrantLock lock;
 
@@ -24,8 +28,10 @@ public class ReceveidAndTreat implements Runnable {
 
   private final SeqPedido seqPedido;
 
-  public ReceveidAndTreat(Information status, DatagramSocket socket, String pathDir, InetAddress clientIP, SeqPedido seqPedido) {
+  public ReceveidAndTreat(Information status, DatagramSocket socket, String pathDir, InetAddress clientIP,
+                          SeqPedido seqPedido, Log log) {
     this.status = status;
+    this.log = log;
     this.socket = socket;
     this.pathDir = pathDir;
     this.clientIP = clientIP;
@@ -38,7 +44,7 @@ public class ReceveidAndTreat implements Runnable {
     DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
     try {
       LinkedList<Thread> threads = new LinkedList<>();
-      while ( !status.isTerminated() ){
+      while (!status.isTerminated()) {
         try {
           socket.receive(receivedPacket);
         } catch (SocketTimeoutException e) {
@@ -49,8 +55,8 @@ public class ReceveidAndTreat implements Runnable {
         }
 
         byte[] dados = receivedPacket.getData().clone();
-        DatagramPacket p = new DatagramPacket(dados,dados.length,receivedPacket.getAddress(),receivedPacket.getPort());
-        var msg = new ControlMsgWithChangePorts(seqPedido,clientIP, pathDir,p, status);
+        DatagramPacket p = new DatagramPacket(dados, dados.length, receivedPacket.getAddress(), receivedPacket.getPort());
+        var msg = new ControlMsgWithChangePorts(seqPedido, clientIP, pathDir, p, status, log);
         //System.out.println("EU sei q recebi isto algo no principal");
         SendMSWithChangePorts t = new SendMSWithChangePorts(msg);
 
@@ -59,7 +65,7 @@ public class ReceveidAndTreat implements Runnable {
         n.start();
       }
 
-      for(var t : threads)
+      for (var t : threads)
         t.join();
 
     } catch (TimeOutMsgException | AckErrorException | PackageErrorException | IOException | InterruptedException e) {

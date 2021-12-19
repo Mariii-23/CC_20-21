@@ -1,4 +1,4 @@
-package module.Exceptions;
+package module.exceptions;
 
 /**
  * Esta excepção deverá ser lançada quando o package encontra-se ou mal formatado,

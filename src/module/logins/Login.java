@@ -1,22 +1,19 @@
 package module.logins;
 
-import javax.xml.crypto.dsig.spec.HMACParameterSpec;
 import java.util.HashMap;
-import java.util.Scanner;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Random;
+import java.util.Scanner;
 
 public class Login {
-  HashMap<String,String> combination;
-  String fileName;
+  private final HashMap<String, String> combination;
+  private final String fileName;
 
   public Login(String fileName) {
     this.fileName = fileName;
     this.combination = new HashMap<>();
   }
 
-  public void readAutenticationFile(){
+  public void readAutenticationFile() {
     String[] temparr = new String[2];
 
     Scanner myReader = new Scanner(fileName);

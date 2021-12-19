@@ -26,45 +26,45 @@ public class Create_html_file {
     return "STATUS";
   }
 
-  private /*@NotNull*/ String create_line_table(/*@NotNull*/ File file){
-    var is_file = file.isFile() ?  "FILE" : "DIRECTORY";
+  private /*@NotNull*/ String create_line_table(/*@NotNull*/ File file) {
+    var is_file = file.isFile() ? "FILE" : "DIRECTORY";
     //var size = (double) file.length() / (1024 * 1024) ; //"mb"
     var size = file.length();
     //var size = file.getTotalSpace(); // tem q se fazer a conversao i guess
-    return "<tr><td>" + create_link_file_or_dir(file) +"</td><td>"+ is_file +"</td><td>"+ size +"</td></tr>\n";
+    return "<tr><td>" + create_link_file_or_dir(file) + "</td><td>" + is_file + "</td><td>" + size + "</td></tr>\n";
   }
 
-  private /*@NotNull*/ String create_table(){
+  private /*@NotNull*/ String create_table() {
     var table = new StringBuilder();
     table.append("<table>\n");
     //table.append("   <caption>").append(create_link_file_or_dir(dir)).append("</caption>\n");
 
     table.append("<tr><th>Path</th><th>What is?</th><th>Size</th></tr>\n");
     var listDir = dir.listFiles();
-      for(File children : listDir) {
-        table.append(create_line_table(children));
-      }
+    for (File children : listDir) {
+      table.append(create_line_table(children));
+    }
 
-      table.append("</table>\n");
-      return table.toString();
+    table.append("</table>\n");
+    return table.toString();
   }
 
   private /*@NotNull*/ String create_link_file_or_dir(/*@NotNull*/ File file) {
-    String url = dir.getAbsolutePath() + "/" + file.getName() ;
+    String url = dir.getAbsolutePath() + "/" + file.getName();
     var link = new StringBuilder("<a href=" + "\"" + url + "\">" + file.getName() + "</a>\n");
-    return  link.toString();
+    return link.toString();
   }
 
   private /*@NotNull*/ String html_body() {
     var listDir = dir.listFiles();
 
     var builder = new StringBuilder();
-    var link_path = "<a href=" + "\"" + dir.getAbsolutePath() + "\">"+ dir. getPath() +"</a>";
+    var link_path = "<a href=" + "\"" + dir.getAbsolutePath() + "\">" + dir.getPath() + "</a>";
     builder.append("<h1>Status of directory ")
         .append(link_path)
         .append("</h1>\n");
 
-    if (listDir != null){
+    if (listDir != null) {
 
       builder.append("<h2>List of files</h2>\n")
           .append(create_table());
@@ -75,10 +75,10 @@ public class Create_html_file {
     return builder.toString();
   }
 
-  public String createHtml() throws IOException{
+  public String createHtml() throws IOException {
     BufferedReader objReader;
     try {
-      objReader = new BufferedReader(new FileReader(Constantes.PATHS.PARENT_PATH+"/"+Constantes.PATHS.TEMPLATE_HTML));
+      objReader = new BufferedReader(new FileReader(Constantes.PATHS.PARENT_PATH + "/" + Constantes.PATHS.TEMPLATE_HTML));
     } catch (IOException e) {
       System.out.println(e.toString());
       return "";
@@ -87,7 +87,7 @@ public class Create_html_file {
     String strCurrentLine;
     var html_builder = new StringBuilder();
     while ((strCurrentLine = objReader.readLine()) != null) {
-      html_builder.append(strCurrentLine) ;
+      html_builder.append(strCurrentLine);
     }
     objReader.close();
 
@@ -103,7 +103,7 @@ public class Create_html_file {
   public String createHtml(String title, String body) throws IOException {
     BufferedReader objReader;
     try {
-      objReader = new BufferedReader(new FileReader(Constantes.PATHS.PARENT_PATH+"/"+Constantes.PATHS.TEMPLATE_HTML));
+      objReader = new BufferedReader(new FileReader(Constantes.PATHS.PARENT_PATH + "/" + Constantes.PATHS.TEMPLATE_HTML));
     } catch (IOException e) {
       System.out.println(e.toString());
       return "";
@@ -112,7 +112,7 @@ public class Create_html_file {
     String strCurrentLine;
     var html_builder = new StringBuilder();
     while ((strCurrentLine = objReader.readLine()) != null) {
-      html_builder.append(strCurrentLine) ;
+      html_builder.append(strCurrentLine);
     }
     objReader.close();
 
@@ -122,7 +122,7 @@ public class Create_html_file {
     return htmlString.toString();
   }
 
-  public void toHtml()  throws IOException {
+  public void toHtml() throws IOException {
     var myWriter = new FileWriter(out_name);
     myWriter.write(createHtml());
     myWriter.close();

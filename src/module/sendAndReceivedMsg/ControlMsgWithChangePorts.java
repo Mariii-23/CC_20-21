@@ -1,17 +1,22 @@
-package control;
+package module.sendAndReceivedMsg;
 
-import module.Exceptions.AckErrorException;
-import module.Exceptions.PackageErrorException;
-import module.Exceptions.TimeOutMsgException;
-import module.Information;
-import module.MSG_interface;
-import module.MsgType.ACK;
+import interfaces.MSG_interface;
+import module.exceptions.AckErrorException;
+import module.exceptions.PackageErrorException;
+import module.exceptions.TimeOutMsgException;
+import module.log.Log;
+import module.msgType.ACK;
+import module.status.Information;
+import module.status.SeqPedido;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 
-public class ControlMsgWithChangePorts implements Runnable{
-
+public class ControlMsgWithChangePorts implements Runnable {
+  private final Log log;
   private final InetAddress clientIP;
   private final MSG_interface msg_interface;
   private final boolean is_send;
@@ -20,24 +25,27 @@ public class ControlMsgWithChangePorts implements Runnable{
   private final SeqPedido seqPedido;
 
   public ControlMsgWithChangePorts(SeqPedido seqPedido, InetAddress clientIP, String dir, DatagramPacket packet,
-                                   Information information) throws IOException,
+                                   Information information, Log log) throws IOException,
       TimeOutMsgException, PackageErrorException, AckErrorException {
+    this.log = log;
     this.seqPedido = seqPedido;
     this.is_send = false;
     this.clientIP = clientIP;
     this.socket = new DatagramSocket(0);
     this.clientPort = packet.getPort();
-    this.msg_interface = MSG_interface.createMsg(packet,socket,seqPedido,dir,information);
+    this.msg_interface = MSG_interface.createMsg(packet, socket, seqPedido, dir, information, log);
     //System.out.println("Tou na porta " + socket.getLocalPort());
   }
 
-  public ControlMsgWithChangePorts(SeqPedido seqPedido, MSG_interface msg, InetAddress clientIP, int clientPort) throws SocketException {
+  public ControlMsgWithChangePorts(SeqPedido seqPedido, MSG_interface msg, InetAddress clientIP, int clientPort,
+                                   Log log) throws SocketException {
+    this.log = log;
     this.seqPedido = seqPedido;
     this.msg_interface = msg;
     this.is_send = true;
     this.clientIP = clientIP;
     this.socket = new DatagramSocket(0);
-    this.clientPort =clientPort;
+    this.clientPort = clientPort;
     //System.out.println("Tou na porta " + socket.getLocalPort());
   }
 
@@ -48,15 +56,15 @@ public class ControlMsgWithChangePorts implements Runnable{
 
   @Override
   public void run() {
-    if( !is_send ){
+    if (!is_send) {
       System.out.println("RECEBI: ");
       System.out.println(msg_interface.toString());
 
       //System.out.println("Vou mandar o ack para a porta " + clientPort);
       ACK ack;
       try {
-        ack = new ACK(msg_interface.getPacket(),clientPort,socket,clientIP,seqPedido.getSeq());
-      } catch (Exception e){
+        ack = new ACK(msg_interface.getPacket(), clientPort, socket, clientIP, seqPedido.getSeq(), log);
+      } catch (Exception e) {
         e.printStackTrace();
         return;
       }

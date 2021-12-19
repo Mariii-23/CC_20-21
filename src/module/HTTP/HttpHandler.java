@@ -8,13 +8,13 @@ import java.util.Date;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
-public class HttpHandler implements  AutoCloseable , Runnable{
+public class HttpHandler implements AutoCloseable, Runnable {
   private final String pathDir;
   private final PrintWriter out;
   private final BufferedReader in;
   private final Socket s;
 
-  public HttpHandler(Socket s,String dirName) throws IOException{
+  public HttpHandler(Socket s, String dirName) throws IOException {
     this.pathDir = dirName;
     this.s = s;
     out = new PrintWriter(s.getOutputStream());
@@ -22,11 +22,11 @@ public class HttpHandler implements  AutoCloseable , Runnable{
   }
 
   // passar para string um dado ficheiro
-  private String readFile (String fileName) throws FileNotFoundException {
-    File file = new File( Constantes.PATHS.PARENT_PATH , fileName);
+  private String readFile(String fileName) throws FileNotFoundException {
+    File file = new File(Constantes.PATHS.PARENT_PATH, fileName);
     StringBuilder s = new StringBuilder();
     Scanner scanner = new Scanner(file);
-    while( scanner.hasNextLine())
+    while (scanner.hasNextLine())
       s.append(scanner.nextLine()).append("\n");
     return s.toString();
   }
@@ -34,14 +34,14 @@ public class HttpHandler implements  AutoCloseable , Runnable{
   /// Pedidos SEND
 
   // Responder ao pedido do status SEND /
-  private void handleStatus() throws IOException{
-    String string =  new Create_html_file(pathDir).createHtml();
+  private void handleStatus() throws IOException {
+    String string = new Create_html_file(pathDir).createHtml();
     out.println("HTTP/1.1 200 OK");
     out.println("Server: " + Constantes.CONFIG.SERVER_NAME);
-    out.println("Date: "+ new Date());
+    out.println("Date: " + new Date());
     out.println("Content-type: text/html");
     out.println("Content-length: " + string.length());
-    out.println("Connection: Closed" );
+    out.println("Connection: Closed");
     out.println();
     out.println(string);
     out.flush();
@@ -63,7 +63,7 @@ public class HttpHandler implements  AutoCloseable , Runnable{
   /// PEDIDOS Nao suportados
 
   // Responder ao pedido nao suportado
-  private void handleNotSupported() throws  IOException {
+  private void handleNotSupported() throws IOException {
     var string = readFile(Constantes.PATHS.NOT_SUPPORTED);
     out.println("HTTP/1.1 501 Not Implemented");
     out.println("Server: ");
@@ -80,18 +80,23 @@ public class HttpHandler implements  AutoCloseable , Runnable{
   // Handler do pedido do get
   private void handleGet(String fileRequest) throws IOException {
     switch (fileRequest) {
-      case "/" : handleStatus();
-      //case "/ola" : handleNotSupported();
-      default : handlePageNotFound();
+      case "/":
+        handleStatus();
+        //case "/ola" : handleNotSupported();
+      default:
+        handlePageNotFound();
     }
   }
 
   // Handler dos pedidos
   private void handleResponse(String method, String fileRequest) throws IOException {
     switch (method) {
-      case "SEND" : handleGet(fileRequest);
-      case "GET" : handleGet(fileRequest);
-      default : handleNotSupported();
+      case "SEND":
+        handleGet(fileRequest);
+      case "GET":
+        handleGet(fileRequest);
+      default:
+        handleNotSupported();
     }
   }
 

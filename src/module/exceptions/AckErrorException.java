@@ -1,4 +1,4 @@
-package module.Exceptions;
+package module.exceptions;
 
 /**
  * Esta excepcção será lançada quando o package do tipo Ack a ser recebido é diferente do esperado.

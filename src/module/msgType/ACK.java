@@ -1,10 +1,11 @@
-package module.MsgType;
+package module.msgType;
 
+import interfaces.MSG_interface;
 import module.Constantes;
-import module.Exceptions.AckErrorException;
-import module.Exceptions.PackageErrorException;
-import module.Exceptions.TimeOutMsgException;
-import module.MSG_interface;
+import module.exceptions.AckErrorException;
+import module.exceptions.PackageErrorException;
+import module.exceptions.TimeOutMsgException;
+import module.log.Log;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -15,29 +16,34 @@ import java.net.SocketTimeoutException;
 public class ACK implements MSG_interface {
 
   private int port;
+  private final Log log;
 
-  InetAddress clientIP;
+  private final InetAddress clientIP;
 
-  Type type = Type.ACK;
-  DatagramPacket packet; //
-  DatagramSocket socket;
+  private final Type type = Type.ACK;
+  private DatagramPacket packet; //
+  private DatagramSocket socket;
 
-  Byte seqPedido;
-  Byte seq = (byte) 0;
-  Byte seqConfirmed; // seq a confirmar
-  Byte seqSegConfirmed; // seq a confirmar
+  private final Byte seqPedido;
+  private final Byte seq = (byte) 0;
+  private final Byte seqConfirmed; // seq a confirmar
+  private final Byte seqSegConfirmed; // seq a confirmar
+  private final Boolean isEmpty;
 
-  public ACK(DatagramPacket packet,int port,DatagramSocket socket, InetAddress clientIP, byte seq) {
+  public ACK(DatagramPacket packet, int port, DatagramSocket socket, InetAddress clientIP, byte seq, Log log) {
+    this.log = log;
     this.port = port;
     this.packet = packet;
     this.clientIP = clientIP;
     this.socket = socket;
-    if (packet==null){
+    if (packet == null) {
       this.seqConfirmed = (byte) 0;
       this.seqSegConfirmed = (byte) 0;
-    }else{
+      this.isEmpty = true;
+    } else {
       this.seqConfirmed = getSeq(packet); //pedido
       this.seqSegConfirmed = getSeqSegmento(packet); //segmento
+      this.isEmpty = false;
     }
     this.seqPedido = seq;
     this.type.flagOn();
@@ -63,8 +69,8 @@ public class ACK implements MSG_interface {
 
   @Override
   public void createTailPacket(byte[] buff) {
-    buff[3]  = seqConfirmed;
-    buff[4]  = seqSegConfirmed;
+    buff[3] = seqConfirmed;
+    buff[4] = seqSegConfirmed;
   }
 
   //@Override
@@ -91,20 +97,26 @@ public class ACK implements MSG_interface {
 
   @Override
   public void send() throws IOException {
-    var packet = createPacket(seqPedido,seq);
+    var packet = createPacket(seqPedido, seq);
     socket.send(packet);
+    if (!isEmpty)
+      log.addQueueSend(MSG_interface.MSGToString(packet));
   }
 
   @Override
   public void sendFirst(DatagramSocket socket) throws IOException {
-    var packet = createPacket(seqPedido,seq);
+    var packet = createPacket(seqPedido, seq);
     socket.send(packet);
+    if (!isEmpty)
+      log.addQueueSend(MSG_interface.MSGToString(packet));
   }
 
   @Override
   public void send(DatagramSocket socket) throws IOException, PackageErrorException {
-    var packet = createPacket(seqPedido,seq);
+    var packet = createPacket(seqPedido, seq);
     socket.send(packet);
+    if (!isEmpty)
+      log.addQueueSend(MSG_interface.MSGToString(packet));
   }
 
   @Override
@@ -113,7 +125,7 @@ public class ACK implements MSG_interface {
     DatagramPacket dpac = new DatagramPacket(buff, buff.length);
     try {
       socket.receive(dpac);
-    } catch (SocketTimeoutException e){
+    } catch (SocketTimeoutException e) {
       throw new TimeOutMsgException("Tempo de resposta ultrapassado");
     }
 
@@ -124,20 +136,19 @@ public class ACK implements MSG_interface {
       throw new AckErrorException("Seq a confirmar não é o correspondido", packet.getData()[2]);
 
     port = dpac.getPort();
-    System.out.println("RECEBI: "+ ACK.toString(dpac));
+    System.out.println("RECEBI: " + ACK.toString(dpac));
   }
 
   public String toString() {
-    if (packet!=null) {
+    if (packet != null) {
       return ACK.toString(packet);
-    }
-    else {
+    } else {
       return "Packet Invalid";
     }
   }
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return  "[ACK]  -> SEQ: " + msg[1] + "; SEG: " +msg[2] + "; MSG: Seq: " + msg[3] + " Seg: "+ msg[4];
+    return "[ACK]  -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG: Seq: " + msg[3] + " Seg: " + msg[4];
   }
 }

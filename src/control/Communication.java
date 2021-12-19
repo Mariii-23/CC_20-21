@@ -1,19 +1,23 @@
-package module;
+package control;
 
-import control.ControlMsgWithChangePorts;
-import control.ReceveidAndTreat;
-import control.SeqPedido;
-import control.SynchronizeDirectory;
-import module.Exceptions.PackageErrorException;
-import module.MsgType.HI;
-import module.MsgType.List;
+import module.Constantes;
+import module.exceptions.PackageErrorException;
+import module.log.Log;
+import module.msgType.HI;
+import module.sendAndReceivedMsg.ReceveidAndTreat;
+import module.status.Information;
+import module.status.SeqPedido;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 
-public class Communication implements Runnable{
+public class Communication implements Runnable {
 
   private final Information status; // server para verificar se o programa termina
+  private final Log log;
   private DatagramSocket socket;
 
   private final String pathDir;
@@ -23,8 +27,9 @@ public class Communication implements Runnable{
   private SeqPedido seqPedido;
   //private seqPed
 
-  public Communication(Information status,String clientIP, String pathDir) throws UnknownHostException {
+  public Communication(Information status, String clientIP, String pathDir, Log log) throws UnknownHostException {
     this.status = status;
+    this.log = log;
     //this.serverIP = InetAddress.getByName(clientIP);
     this.clientIP = InetAddress.getByName(clientIP);
     this.port = Constantes.CONFIG.PORT_UDP;
@@ -34,11 +39,11 @@ public class Communication implements Runnable{
 
   private void connect() {
     try {
-        iniciarConecao();
-    } catch (SocketTimeoutException e){
+      iniciarConecao();
+    } catch (SocketTimeoutException e) {
       try {
         confirmarConecao();
-      }catch (Exception e3){
+      } catch (Exception e3) {
         e3.printStackTrace();
       }
     } catch (Exception ioException) {
@@ -49,7 +54,7 @@ public class Communication implements Runnable{
   private void confirmarConecao() throws IOException {
     seqPedido = new SeqPedido((byte) 10);
     System.out.println("servidor");
-    HI HiMSG = new HI(clientIP,port,socket,seqPedido);
+    HI HiMSG = new HI(clientIP, port, socket, seqPedido, log);
     HiMSG.received();
   }
 
@@ -59,10 +64,10 @@ public class Communication implements Runnable{
     // TODO ver melhor o tempo
     socket.setSoTimeout(200);
 
-    HI hiMsg = new HI(clientIP,port,socket,seqPedido);
+    HI hiMsg = new HI(clientIP, port, socket, seqPedido, log);
     try {
       hiMsg.send();
-    } catch (PackageErrorException e){
+    } catch (PackageErrorException e) {
       //a conecao falhou porque ele recebeu um pacote errado muitas vezes
       System.out.println("A coneção falhou");
       e.printStackTrace();
@@ -72,17 +77,20 @@ public class Communication implements Runnable{
   @Override
   public void run() {
     connect();
-    ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status,socket,pathDir,clientIP,seqPedido);
+    ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status, socket, pathDir, clientIP, seqPedido, log);
     SynchronizeDirectory synchronizeDirectory =
-        new SynchronizeDirectory(status,socket,pathDir,clientIP,port,seqPedido);
-    Thread[] threads = new Thread[2];
+        new SynchronizeDirectory(status, socket, pathDir, clientIP, port, seqPedido, log);
+    Thread[] threads = new Thread[3];
     threads[0] = new Thread(receveidAndTreat);
     threads[1] = new Thread(synchronizeDirectory);
+    threads[2] = new Thread(log);
+    threads[2].start();
     threads[0].start();
     threads[1].start();
     try {
       threads[0].join();
       threads[1].join();
+      threads[2].join();
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -91,8 +99,8 @@ public class Communication implements Runnable{
   }
 
   public void close() {
-      if(socket!=null) {
-        socket.close();
-      }
+    if (socket != null) {
+      socket.close();
+    }
   }
 }

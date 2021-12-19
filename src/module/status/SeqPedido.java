@@ -1,10 +1,10 @@
-package control;
+package module.status;
 
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SeqPedido {
   private byte seq;
-  private ReentrantLock l;
+  private final ReentrantLock l;
 
   public SeqPedido() {
     seq = (byte) 0;

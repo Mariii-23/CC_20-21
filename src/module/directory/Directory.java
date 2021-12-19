@@ -1,32 +1,28 @@
-package module.Status;
-
-import module.Pair;
+package module.directory;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
 
 public class Directory {
-  HashMap<String,FileStruct> files;
+  private final HashMap<String, FileStruct> files;
 
   public Directory(File dir) {
     files = new HashMap<>();
 
-    for(File file : Objects.requireNonNull(dir.listFiles()))
-      files.put( file.getName() ,new FileStruct(file));
-  }
-
-  public Directory(List<FileStruct> files) {
-    files = files;
+    for (File file : Objects.requireNonNull(dir.listFiles()))
+      files.put(file.getName(), new FileStruct(file));
   }
 
   public boolean addFile(FileStruct file) {
-    var fail = files.putIfAbsent(file.name,file);
+    var fail = files.putIfAbsent(file.name, file);
     return fail == null;
   }
 
   public boolean addFile(String name, Long lastModification, boolean isDirectory) {
     var file = new FileStruct(name, lastModification, isDirectory);
-    var fail = files.putIfAbsent(file.name,file);
+    var fail = files.putIfAbsent(file.name, file);
     return fail == null;
   }
 
@@ -36,15 +32,15 @@ public class Directory {
     if (o == null || getClass() != o.getClass()) return false;
     Directory directory = (Directory) o;
     boolean success = true;
-    for( FileStruct file :directory.files.values()){
+    for (FileStruct file : directory.files.values()) {
       var name = file.name;
       FileStruct ourFile = this.files.get(name);
-        if(ourFile!=null) {
-          success = ourFile.equals(file);
-        } else {
-          success = false;
-          break;
-        }
+      if (ourFile != null) {
+        success = ourFile.equals(file);
+      } else {
+        success = false;
+        break;
+      }
     }
     return success;
   }
@@ -53,14 +49,13 @@ public class Directory {
     if (files == null || files.isEmpty())
       return null;
     ArrayList<String> filesReceived = new ArrayList<>();
-    for (FileStruct fs: files.values()) {
+    for (FileStruct fs : files.values()) {
       if (this.files.containsKey(fs.name)) {
         FileStruct aux = this.files.get(fs.name);
         if (aux.getLastModification() < fs.getLastModification()) {
           filesReceived.add(fs.name);
         }
-      }
-      else {
+      } else {
         filesReceived.add(fs.name);
       }
 

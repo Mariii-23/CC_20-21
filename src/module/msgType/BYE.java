@@ -1,12 +1,13 @@
-package module.MsgType;
+package module.msgType;
 
-import control.SeqPedido;
+import interfaces.MSG_interface;
 import module.Constantes;
-import module.Exceptions.AckErrorException;
-import module.Exceptions.PackageErrorException;
-import module.Exceptions.TimeOutMsgException;
-import module.Information;
-import module.MSG_interface;
+import module.exceptions.AckErrorException;
+import module.exceptions.PackageErrorException;
+import module.exceptions.TimeOutMsgException;
+import module.log.Log;
+import module.status.Information;
+import module.status.SeqPedido;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -14,7 +15,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class BYE implements MSG_interface {
-
+  private final Log log;
   private int port;
   private final InetAddress clientIP;
   private DatagramSocket socket;
@@ -28,7 +29,8 @@ public class BYE implements MSG_interface {
   private DatagramPacket packet;
 
   public BYE(int port, InetAddress clientIP, DatagramSocket socket,
-             SeqPedido seqPedido,DatagramPacket packet, Information information) {
+             SeqPedido seqPedido, DatagramPacket packet, Information information, Log log) {
+    this.log = log;
     this.port = port;
     this.clientIP = clientIP;
     this.socket = socket;
@@ -38,7 +40,8 @@ public class BYE implements MSG_interface {
   }
 
   public BYE(DatagramPacket packet, InetAddress clientIP, int port, DatagramSocket socket, SeqPedido seqPedido,
-             Information information){
+             Information information, Log log) {
+    this.log = log;
     this.packet = packet;
     this.clientIP = clientIP;
     this.port = port;
@@ -79,19 +82,21 @@ public class BYE implements MSG_interface {
 
   @Override
   public void createTailPacket(byte[] buff) {
-    for(int i = Constantes.CONFIG.HEAD_SIZE; i < Constantes.CONFIG.BUFFER_SIZE; i++)
+    for (int i = Constantes.CONFIG.HEAD_SIZE; i < Constantes.CONFIG.BUFFER_SIZE; i++)
       buff[i] = 0;
   }
 
   public DatagramPacket createPacket() {
-    byte[] msg = createMsg(seqPedido.getSeq(),seq); seq++;
-    return new DatagramPacket(msg, msg.length, clientIP ,port);
+    byte[] msg = createMsg(seqPedido.getSeq(), seq);
+    seq++;
+    return new DatagramPacket(msg, msg.length, clientIP, port);
   }
 
   @Override
   public void send() throws IOException, PackageErrorException {
     DatagramPacket packet = createPacket();
     socket.send(packet);
+    log.addQueueSend(MSG_interface.MSGToString(packet));
     send(this.socket);
   }
 
@@ -99,12 +104,13 @@ public class BYE implements MSG_interface {
   public void sendFirst(DatagramSocket socket) throws IOException {
     DatagramPacket packet = createPacket();
     socket.send(packet);
+    log.addQueueSend(MSG_interface.MSGToString(packet));
     this.packet = packet;
   }
 
   @Override
   public void send(DatagramSocket socket) throws IOException, PackageErrorException {
-    ACK ack = new ACK(this.packet,port,socket,clientIP,seq);
+    ACK ack = new ACK(this.packet, port, socket, clientIP, seq, log);
     boolean ackFail = false;
     while (!ackFail) {
       try {
@@ -113,6 +119,7 @@ public class BYE implements MSG_interface {
       } catch (TimeOutMsgException | AckErrorException e) {
         packet.setPort(port);
         socket.send(packet);
+        log.addQueueSend(MSG_interface.MSGToString(packet));
       } catch (PackageErrorException e1) {
         break;
       }
@@ -124,9 +131,9 @@ public class BYE implements MSG_interface {
     information.endProgram();
   }
 
-  public static String toString(DatagramPacket packet){
+  public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return  "[BYE]  -> SEQ: "+ msg[1] + "; SEG: " + msg[2];
+    return "[BYE]  -> SEQ: " + msg[1] + "; SEG: " + msg[2];
   }
 
   public String toString() {

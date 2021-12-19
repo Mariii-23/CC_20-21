@@ -1,26 +1,46 @@
-import module.Communication;
-import module.Information;
+import control.Communication;
+import module.Constantes;
 import module.HTTP.Listening;
+import module.log.Log;
+import module.status.Information;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 
 public class main {
-
   public static void main(String[] args) throws IOException {
+    if (args.length != 2) {
+      System.out.println(Constantes.PHRASES.INSTRUCTIONS);
+      return;
+    }
     String ip = args[0];
+    try {
+      InetAddress.getByName( ip );
+    } catch (UnknownHostException ignored) {
+      System.out.println("IP: "+ip+ " is not valid\n");
+      return;
+    }
+
     String path = args[1];
-    //TODO confirmar argumentos
-
-    // verificar se o argumento 0 é um ip valido , verificar o formato
-    // InetAddress.getByName( ... ); -> basta ver se isto nao lanca excecao
-
-    // verificar se o argumnto 1 é uma pasta valida... isto é se o path é valido e exite
-
-    // senoa for... terminar programa e printar o erro
+    try {
+      if (!Files.isDirectory(Path.of(path))) {
+        System.out.println("PATH -> "+path+" dont exist or is not a directory");
+        return;
+      }
+    } catch (InvalidPathException ignored){
+        System.out.println("PATH -> "+path+" is an invalid path");
+        return;
+    }
 
     Information status = new Information();
+    Log log = new Log(path + '/' + Constantes.CONFIG.LOG_NAME_FILE, status);
 
-    Communication c = new Communication(status ,ip, path);
+    Communication c = new Communication(status, ip, path, log);
     Listening l = new Listening(status, path);
 
     Thread[] t = new Thread[2];

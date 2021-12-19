@@ -1,11 +1,11 @@
 package module.HTTP;
 
 import module.Constantes;
-import module.HTTP.HttpHandler;
-import module.Information;
+import module.status.Information;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class Listening implements Runnable {
 
@@ -24,7 +24,7 @@ public class Listening implements Runnable {
     try {
       ServerSocket serverSocket = new ServerSocket(port);
       while (!status.isTerminated()) {
-        // maybe por tempo assim quando terminamos o programa ele
+        // TODO maybe por tempo assim quando terminamos o programa ele
         // nao fica a espera de 1 ultima concecao
         Socket client = serverSocket.accept();
 
@@ -32,7 +32,7 @@ public class Listening implements Runnable {
           Thread t = new Thread(new HttpHandler(client, pathDir));
           t.run();
           t.join();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
           System.out.println(e.toString());
         }
         //PrintWriter out_ = new PrintWriter(client.getOutputStream());
@@ -49,7 +49,7 @@ public class Listening implements Runnable {
         //}
       }
       serverSocket.close();
-    } catch (IOException ignored){
+    } catch (IOException ignored) {
     }
   }
 }

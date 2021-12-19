@@ -1,8 +1,4 @@
-package module.MsgType;
-
-import module.MsgType.HI;
-
-import java.net.DatagramPacket;
+package module.msgType;
 
 public enum Type {
   Hi((byte) 0), // 64 ultimo
@@ -30,17 +26,17 @@ public enum Type {
     }
   }
 
-  public static byte seeType(byte num) {
-    if (num < (byte) 64)
-      return num;
-    else {
-      return  (byte) (((int) num) - 64);
-    }
-  }
+  //public static byte seeType(byte num) {
+  //  if (num < (byte) 64)
+  //    return num;
+  //  else {
+  //    return (byte) (((int) num) - 64);
+  //  }
+  //}
 
   Type(Byte num, boolean flag) {
-      this.num = num;
-      this.flagLast = flag;
+    this.num = num;
+    this.flagLast = flag;
   }
 
   public Byte getNum() {
@@ -51,18 +47,18 @@ public enum Type {
     //if (flagLast)
     //  return (byte) (num.intValue() + 64);
     //else
-      return num;
+    return num;
   }
 
   public Boolean getFlagLast() {
     return flagLast;
   }
 
-  public void flagOn(){
+  public void flagOn() {
     this.flagLast = true;
   }
 
-  public void flagOff(){
+  public void flagOff() {
     this.flagLast = false;
   }
 }

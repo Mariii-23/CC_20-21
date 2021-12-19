@@ -1,20 +1,24 @@
-package module.MsgType;
+package module.msgType;
 
-import control.SeqPedido;
+import interfaces.MSG_interface;
 import module.Constantes;
-import module.Exceptions.AckErrorException;
-import module.Exceptions.PackageErrorException;
-import module.Exceptions.TimeOutMsgException;
-import module.MSG_interface;
-import module.Status.FileStruct;
+import module.directory.FileStruct;
+import module.exceptions.AckErrorException;
+import module.exceptions.PackageErrorException;
+import module.exceptions.TimeOutMsgException;
+import module.log.Log;
+import module.status.SeqPedido;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 
 public class GET implements MSG_interface {
 
+  private final Log log;
   private final String dir;
   private int port;
   private final InetAddress clientIP;
@@ -29,7 +33,9 @@ public class GET implements MSG_interface {
   private DatagramPacket packet;
 
 
-  public GET(InetAddress clientIp, int port, DatagramSocket socket, SeqPedido seqPedido, FileStruct file, String dir) {
+  public GET(InetAddress clientIp, int port, DatagramSocket socket, SeqPedido seqPedido, FileStruct file,
+             String dir, Log log) {
+    this.log = log;
     this.port = port;
     this.clientIP = clientIp;
     this.socket = socket;
@@ -39,7 +45,9 @@ public class GET implements MSG_interface {
     this.packet = null;
   }
 
-  public GET(DatagramPacket packet,InetAddress clientIP, int port, DatagramSocket socket, SeqPedido seq, String dir){
+  public GET(DatagramPacket packet, InetAddress clientIP, int port, DatagramSocket socket, SeqPedido seq, String dir,
+             Log log) {
+    this.log = log;
     this.dir = dir;
     this.port = port;
     this.clientIP = clientIP;
@@ -81,46 +89,48 @@ public class GET implements MSG_interface {
 
   @Override
   public void createTailPacket(byte[] buff) {
-    if(file == null)
+    if (file == null)
       return;
     String name = file.getName();
-    int i2=0;
+    int i2 = 0;
     int i = Constantes.CONFIG.HEAD_SIZE;
     byte[] string = name.getBytes(StandardCharsets.UTF_8);
-    for (; i2 < string.length && i < Constantes.CONFIG.BUFFER_SIZE ; i++,i2++ ){
+    for (; i2 < string.length && i < Constantes.CONFIG.BUFFER_SIZE; i++, i2++) {
       buff[i] = string[i2];
     }
 
-    for( ;i < Constantes.CONFIG.BUFFER_SIZE; i++)
+    for (; i < Constantes.CONFIG.BUFFER_SIZE; i++)
       buff[i] = 0;
 
-    buff[Constantes.CONFIG.BUFFER_SIZE-1] = 0;
+    buff[Constantes.CONFIG.BUFFER_SIZE - 1] = 0;
   }
 
   public DatagramPacket createPacket() {
-    byte[] msg = createMsg(seqPedido.getSeq(),seq); seq++;
-    return new DatagramPacket(msg, msg.length, clientIP ,port);
+    byte[] msg = createMsg(seqPedido.getSeq(), seq);
+    seq++;
+    return new DatagramPacket(msg, msg.length, clientIP, port);
   }
 
-  public void atualizaFileName(DatagramPacket packet){
+  public void atualizaFileName(DatagramPacket packet) {
     File file_ = new File(getFilename(packet));
     this.file = new FileStruct(file_);
   }
 
-  public String getFilename(DatagramPacket packet){
+  public String getFilename(DatagramPacket packet) {
     byte[] msg = MSG_interface.getDataMsg(packet);
     int i;
-    for (i = 0; i < msg.length && msg[i] != 0; i++);
+    for (i = 0; i < msg.length && msg[i] != 0; i++) ;
 
-    return new String(msg, 0, i,StandardCharsets.UTF_8);
+    return new String(msg, 0, i, StandardCharsets.UTF_8);
   }
 
   @Override
   public void send() throws IOException, PackageErrorException {
     DatagramPacket packet = createPacket();
     socket.send(packet);
+    log.addQueueSend(MSG_interface.MSGToString(packet));
 
-    ACK ack = new ACK(packet,port,socket,clientIP,seq);
+    ACK ack = new ACK(packet, port, socket, clientIP, seq, log);
     boolean ackFail = false;
     while (!ackFail) {
       try {
@@ -128,6 +138,7 @@ public class GET implements MSG_interface {
         ackFail = true;
       } catch (TimeOutMsgException | AckErrorException e) {
         socket.send(packet);
+        log.addQueueSend(MSG_interface.MSGToString(packet));
         //continue;
       } catch (PackageErrorException e1) {
         break;
@@ -141,10 +152,10 @@ public class GET implements MSG_interface {
     if (file == null)
       return; // TODO lancar erro ou mandar o bye
 
-    SEND SENDMsg = new SEND(clientIP,port,socket,seqPedido,file.getName(),dir);
+    SEND SENDMsg = new SEND(clientIP, port, socket, seqPedido, file.getName(), dir, log);
     try {
       SENDMsg.received();
-    }catch (Exception e){
+    } catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -153,6 +164,7 @@ public class GET implements MSG_interface {
   public void sendFirst(DatagramSocket socket) throws IOException {
     DatagramPacket packet = createPacket();
     socket.send(packet);
+    log.addQueueSend(MSG_interface.MSGToString(packet));
     this.packet = packet;
   }
 
@@ -161,7 +173,7 @@ public class GET implements MSG_interface {
     //DatagramPacket packet = createPacket();
     //socket.send(packet);
     // TODO o packet é nulo porque tenho q lho dar
-    ACK ack = new ACK(this.packet,port,socket,clientIP,seq);
+    ACK ack = new ACK(this.packet, port, socket, clientIP, seq, log);
     boolean ackFail = false;
     while (!ackFail) {
       try {
@@ -170,6 +182,7 @@ public class GET implements MSG_interface {
       } catch (TimeOutMsgException | AckErrorException e) {
         packet.setPort(port);
         socket.send(packet);
+        log.addQueueSend(MSG_interface.MSGToString(packet));
         //continue;
       } catch (PackageErrorException e1) {
         break;
@@ -183,10 +196,10 @@ public class GET implements MSG_interface {
     if (file == null)
       return; // TODO lancar erro ou mandar o bye
 
-    SEND SENDMsg = new SEND(clientIP,port,socket,seqPedido,file.getName(),dir);
+    SEND SENDMsg = new SEND(clientIP, port, socket, seqPedido, file.getName(), dir, log);
     try {
       SENDMsg.received();
-    }catch (Exception e){
+    } catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -195,21 +208,21 @@ public class GET implements MSG_interface {
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
     String filename = getFilename(packet);
 
-    if (filename == null){
+    if (filename == null) {
       System.out.println("O filename recebido é nulo");
       return; //TODO send bye
     }
-    SEND SENDMsg = new SEND(clientIP,port,socket,seqPedido,filename,dir);
+    SEND SENDMsg = new SEND(clientIP, port, socket, seqPedido, filename, dir, log);
     try {
       SENDMsg.send();
-    }catch (Exception e){
+    } catch (Exception e) {
       System.out.println(e);
     }
   }
 
-  public static String toString(DatagramPacket packet){
+  public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return  "[GET]  -> SEQ: " + msg[1] + "; SEG: " +msg[2] + "; MSG: "
+    return "[GET]  -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG: "
         + new String(MSG_interface.getDataMsg(packet));
   }
 

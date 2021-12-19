@@ -1,8 +1,11 @@
 package control;
+
+import module.sendAndReceivedMsg.ControlMsgWithChangePorts;
+
 import java.io.IOException;
 
-public class SendMSWithChangePorts implements Runnable{
-  ControlMsgWithChangePorts controlMsgWithChangePorts;
+public class SendMSWithChangePorts implements Runnable {
+  private final ControlMsgWithChangePorts controlMsgWithChangePorts;
 
   public SendMSWithChangePorts(ControlMsgWithChangePorts controlMsgWithChangePorts) {
     this.controlMsgWithChangePorts = controlMsgWithChangePorts;
