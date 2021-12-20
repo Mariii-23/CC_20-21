@@ -50,7 +50,7 @@ public class SynchronizeDirectory implements Runnable {
     //System.out.println("Send first list");
     sendList();
     try {
-      Thread.sleep(10000);
+      Thread.sleep(60000);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

@@ -37,6 +37,9 @@ public class SEND implements MSG_interface {
   private String fileName;
   private Queue<byte[]> fileInBytes = null;
 
+  private long lastModification = 0;
+  private int lastSizeRead = 0;
+
   public SEND(InetAddress clientIp, int port, DatagramSocket socket, SeqPedido seqPedido, String fileName, String dir,
               Log log) {
     this.log = log;
@@ -115,11 +118,34 @@ public class SEND implements MSG_interface {
     return new DatagramPacket(msg, msg.length, clientIP, port);
   }
 
+  private DatagramPacket firstPacket() {
+    String s = lastModification + ";;" + lastSizeRead;
+    var info = s.getBytes(StandardCharsets.UTF_8);
+
+    byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
+    buff[0] = getType().getBytes();
+    buff[1] = seqPedido;
+    buff[2] = seq; seq++;
+
+    int i2 = 0;
+    int i = Constantes.CONFIG.HEAD_SIZE;
+
+    for (; i2 < info.length && i < Constantes.CONFIG.BUFFER_SIZE; i++, i2++) {
+      buff[i] = info[i2];
+    }
+    for (; i < Constantes.CONFIG.BUFFER_SIZE; i++)
+      buff[i] = (byte) 0;
+
+    return new DatagramPacket(buff, buff.length, clientIP, port);
+  }
+
   public Queue<DatagramPacket> createPackets() {
     // isto nao devia acontecer
     if (readFile() != 0) return new LinkedList<>();
 
     Queue<DatagramPacket> list = new LinkedList<>();
+    list.add(firstPacket());
+
     //list.add(file)
     int len = fileInBytes.size();
     for (var i = 0; i < len; i++)
@@ -196,8 +222,10 @@ public class SEND implements MSG_interface {
   }
 
   public void writeFile(Queue<byte[]> array, long lastModification) throws IOException {
-    FileWriter myWriter = new FileWriter(dir + '/' + fileName);
-
+    //FileWriter myWriter = new FileWriter(dir + '/' + fileName);
+    FileOutputStream out = new FileOutputStream(dir + '/' + fileName);
+    int size = array.size();
+    int i=1;
     for (var data : array) {
       //int i =0;
       //for( ; i < data.length && data[i] != (byte) 0 ; i++);
@@ -205,11 +233,22 @@ public class SEND implements MSG_interface {
 
       //String s = new String(copy, StandardCharsets.UTF_8);
       //String s = new String(data,StandardCharsets.UTF_8);
-      String s = new String(data);
-      myWriter.write(s);
+      if( i == size ){
+      //  //ultimo pacote
+        //int p = data.length -1;
+        //for( ; p > 0 && data[p] == (byte) 0 ; p--);
+        out.write(Arrays.copyOfRange(data,0,lastSizeRead));
+      } else
+        out.write(Arrays.copyOfRange(data,0, data.length-3));
+
+      i++;
+      //String s = new String(data);
+      //myWriter.write(s);
     }
-    myWriter.flush();
-    myWriter.close();
+    out.flush();
+    out.close();
+    //myWriter.flush();
+    //myWriter.close();
     File file = new File(dir + '/' + fileName);
     file.setLastModified(lastModification);
   }
@@ -309,17 +348,23 @@ public class SEND implements MSG_interface {
             ack.send();
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
             if (first) {
+              // TODO recebe o lastModification;size_do_ultimo_pacote
               int i;
               for (i = 0; i < data.length && data[i] != (byte) 0; i++) ;
-              lastModification = Long.parseLong(new String(Arrays.copyOfRange(data, 0, i)
-                  , StandardCharsets.UTF_8));
+
+              String msg = new String(Arrays.copyOfRange(data, 0, i));
+              var aux = msg.split(";;",2);;
+              lastModification = Long.parseLong(aux[0]);
+              this.lastSizeRead = Integer.parseInt(aux[1]);
+
               first = false;
               continue;
             }
             int i;
-            for (i = 0; i < data.length && data[i] != (byte) 0; i++) ;
+            //for (i = 0; i < data.length && data[i] != (byte) 0; i++) ;
             if (last == null || !Arrays.equals(last, data)) {
-              file.add(Arrays.copyOfRange(data, 0, i));
+              //file.add(Arrays.copyOfRange(data, 0, i));
+              file.add(data.clone());
               last = data.clone();
             }
 
@@ -361,16 +406,21 @@ public class SEND implements MSG_interface {
     //  int resto = data.length - number * Constantes.CONFIG.TAIL_SIZE;
 
     //  int i;
+    //  boolean first = true;
     //  for ( i =0; i < number; i++) {
     //    int comeco = i*Constantes.CONFIG.TAIL_SIZE;
-    //    int fim = (i+1)*Constantes.CONFIG.TAIL_SIZE;
+    //    if (first){
+    //      first = false;
+    //    } else
+    //      comeco++;
+    //    int fim = comeco + Constantes.CONFIG.TAIL_SIZE;
     //    fileInBytes.add(Arrays.copyOfRange(data,comeco,fim));
     //  }
 
     //  if (resto > 0 ) {
     //    int comeco = i*Constantes.CONFIG.TAIL_SIZE;
     //    int fim = comeco + resto;
-    //    fileInBytes.add(Arrays.copyOfRange(data,comeco,fim));
+    //    fileInBytes.add(Arrays.copyOfRange(data,comeco,comeco + Constantes.CONFIG.TAIL_SIZE));
     //  }
 
     //} catch (IOException e) {
@@ -379,17 +429,20 @@ public class SEND implements MSG_interface {
 
     int size = Constantes.CONFIG.TAIL_SIZE;
     byte[] buff = new byte[size];
-    //fileInBytes.add(Long.toString(file.lastModified()).getBytes(StandardCharsets.UTF_8));
-    fileInBytes.add(Long.toString(file.lastModified()).getBytes());
+    //fileInBytes.add(Long.toString(file.lastModified()).getBytes());
+    this.lastModification = file.lastModified();
 
     int sizeRead = 0;
+    int lastSize = 0;
     try {
       while (-1 != (sizeRead = in.read(buff))) {
+        lastSize = sizeRead;
         for (; sizeRead < size; sizeRead++)
           buff[sizeRead] = (byte) 0;
         fileInBytes.add(buff.clone());
         buff = new byte[size];
       }
+      this.lastSizeRead = lastSize;
     } catch (IOException e) {
       e.printStackTrace();
       return -1;
@@ -399,8 +452,8 @@ public class SEND implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    //return "[SEND] -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG (dados do ficheiro)";
-    return "[SEND] -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG: "
-     + new String(MSG_interface.getDataMsg(packet),StandardCharsets.UTF_8);
+    return "[SEND] -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG (dados do ficheiro)";
+    //return "[SEND] -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG: "
+    // + new String(MSG_interface.getDataMsg(packet),StandardCharsets.UTF_8);
   }
 }
