@@ -14,8 +14,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -126,7 +124,8 @@ public class SEND implements MSG_interface {
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     buff[0] = getType().getBytes();
     buff[1] = seqPedido;
-    buff[2] = seq; seq++;
+    buff[2] = seq;
+    seq++;
 
     int i2 = 0;
     int i = Constantes.CONFIG.HEAD_SIZE;
@@ -224,10 +223,10 @@ public class SEND implements MSG_interface {
 
     //TODO acabar o tempo
     var endTime = System.currentTimeMillis();
-    var time = (endTime-startTime) / 1000 ;
-    var bitsSec = sizeFile * 8L ;
+    var time = (endTime - startTime) / 1000;
+    var bitsSec = sizeFile * 8L;
     if (time > 0) bitsSec = bitsSec / time;
-    var s = "[SEND] Name: " +fileName + " || Size: " + sizeFile  + " || Time (sec): " + time +
+    var s = "[SEND] Name: " + fileName + " || Size: " + sizeFile + " || Time (sec): " + time +
         " || Bits/sec: " + bitsSec;
     log.addQueueTime(s);
   }
@@ -236,7 +235,7 @@ public class SEND implements MSG_interface {
     //FileWriter myWriter = new FileWriter(dir + '/' + fileName);
     FileOutputStream out = new FileOutputStream(dir + '/' + fileName);
     int size = array.size();
-    int i=1;
+    int i = 1;
     for (var data : array) {
       //int i =0;
       //for( ; i < data.length && data[i] != (byte) 0 ; i++);
@@ -244,13 +243,13 @@ public class SEND implements MSG_interface {
 
       //String s = new String(copy, StandardCharsets.UTF_8);
       //String s = new String(data,StandardCharsets.UTF_8);
-      if( i == size ){
-      //  //ultimo pacote
+      if (i == size) {
+        //  //ultimo pacote
         //int p = data.length -1;
         //for( ; p > 0 && data[p] == (byte) 0 ; p--);
-        out.write(Arrays.copyOfRange(data,0,lastSizeRead));
+        out.write(Arrays.copyOfRange(data, 0, lastSizeRead));
       } else
-        out.write(Arrays.copyOfRange(data,0, data.length-3));
+        out.write(Arrays.copyOfRange(data, 0, data.length - 3));
 
       i++;
       //String s = new String(data);
@@ -365,7 +364,8 @@ public class SEND implements MSG_interface {
               for (i = 0; i < data.length && data[i] != (byte) 0; i++) ;
 
               String msg = new String(Arrays.copyOfRange(data, 0, i));
-              var aux = msg.split(";;",2);;
+              var aux = msg.split(";;", 2);
+              ;
               lastModification = Long.parseLong(aux[0]);
               this.lastSizeRead = Integer.parseInt(aux[1]);
 

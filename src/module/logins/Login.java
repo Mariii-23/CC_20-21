@@ -1,7 +1,9 @@
 package module.logins;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -16,15 +18,15 @@ public class Login {
 
   public void readAutenticationFile() {
     try {
-    File file=new File(fileName);
-    FileReader fr = new FileReader(file);
-    BufferedReader br=new BufferedReader(fr);
-    String line;
-    while((line=br.readLine())!=null) {
-      var temparr = line.split(";", 2);
-      combination.put(temparr[0], temparr[1]);
-    }
-    fr.close();    //closes the stream and release the resources
+      File file = new File(fileName);
+      FileReader fr = new FileReader(file);
+      BufferedReader br = new BufferedReader(fr);
+      String line;
+      while ((line = br.readLine()) != null) {
+        var temparr = line.split(";", 2);
+        combination.put(temparr[0], temparr[1]);
+      }
+      fr.close();    //closes the stream and release the resources
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -46,17 +48,9 @@ public class Login {
   public String generateKey() {
     int random = randomNumber();
     int i = 0;
-    for( var elem : combination.keySet())
+    for (var elem : combination.keySet())
       if (i == random) return elem;
       else i++;
     return null;
   }
-
-
-  //public static void main(String[] args) {
-  //  var login = new Login("/home/mari/uni-projetos/CC_TP2/tmp/logins.txt");
-  //  login.readAutenticationFile();
-  //
-  //
-  //}
 }

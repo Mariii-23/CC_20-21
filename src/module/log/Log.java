@@ -14,7 +14,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Log implements Runnable, Closeable {
-  private final Queue<Pair<Integer,String>> queue;
+  private final Queue<Pair<Integer, String>> queue;
   private final ReentrantLock l;
   private final Condition c;
   private final BufferedWriter fileLog;
@@ -71,13 +71,20 @@ public class Log implements Runnable, Closeable {
     }
   }
 
-  private void writeLine(Pair<Integer,String> pair) throws IOException {
+  private void writeLine(Pair<Integer, String> pair) throws IOException {
     var s = pair.getSecond();
     switch (pair.getFirst()) {
-      case 0 : writeLineSend(s); break;
-      case 1 : writeLineTime(s); break;
-      case 2 : writeLineReceived(s); break;
-      default: break;
+      case 0:
+        writeLineSend(s);
+        break;
+      case 1:
+        writeLineTime(s);
+        break;
+      case 2:
+        writeLineReceived(s);
+        break;
+      default:
+        break;
     }
   }
 
@@ -90,7 +97,7 @@ public class Log implements Runnable, Closeable {
     }
   }
 
-  private Pair<Integer,String> removeQueue() {
+  private Pair<Integer, String> removeQueue() {
     try {
       l.lock();
       return queue.remove();
@@ -101,28 +108,28 @@ public class Log implements Runnable, Closeable {
 
   private void writeQueue() {
     while (!status.isTerminated()) {
-        while (!isEmpty()) {
-          try {
-            writeLine(removeQueue());
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-        }
+      while (!isEmpty()) {
         try {
-          l.lock();
-          c.await();
-        } catch (InterruptedException e) {
+          writeLine(removeQueue());
+        } catch (IOException e) {
           e.printStackTrace();
-        } finally {
-          l.unlock();
         }
+      }
+      try {
+        l.lock();
+        c.await();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      } finally {
+        l.unlock();
+      }
     }
   }
 
   public void addQueueSend(String string) {
     try {
       l.lock();
-      queue.add( new Pair<>(0,string));
+      queue.add(new Pair<>(0, string));
       c.signalAll();
     } finally {
       l.unlock();
@@ -132,7 +139,7 @@ public class Log implements Runnable, Closeable {
   public void addQueueTime(String string) {
     try {
       l.lock();
-      queue.add( new Pair<>(1,string));
+      queue.add(new Pair<>(1, string));
       c.signalAll();
     } finally {
       l.unlock();
@@ -142,7 +149,7 @@ public class Log implements Runnable, Closeable {
   public void addQueueReceived(String string) {
     try {
       l.lock();
-      queue.add( new Pair<>(2,string));
+      queue.add(new Pair<>(2, string));
       c.signalAll();
     } finally {
       l.unlock();

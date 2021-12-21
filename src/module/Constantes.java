@@ -49,9 +49,9 @@ public class Constantes {
   }
 
   public static class PHRASES {
-    public static String INSTRUCTIONS = "Corra o programa, fornecendo 2 arguemntos válidso\n"+
-        "1º arg -> [IP do servidor a conectar]\n"+
-        "2º arg -> [Caminho Completo da pasta a ser sincronizada\n"+
-        "Exemplo: 10.3.3.2"+ "\\"+"home"+"\\"+"core"+"\\"+"folder\n";
+    public static String INSTRUCTIONS = "Corra o programa, fornecendo 2 arguemntos válidso\n" +
+        "1º arg -> [IP do servidor a conectar]\n" +
+        "2º arg -> [Caminho Completo da pasta a ser sincronizada\n" +
+        "Exemplo: 10.3.3.2" + "\\" + "home" + "\\" + "core" + "\\" + "folder\n";
   }
 }

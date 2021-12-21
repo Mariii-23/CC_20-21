@@ -4,7 +4,6 @@ import module.Constantes;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.StringTokenizer;

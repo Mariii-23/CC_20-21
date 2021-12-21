@@ -408,7 +408,7 @@ public class List implements MSG_interface {
     byte[] msg = packet.getData();
     byte[] dados = MSG_interface.getDataMsg(packet);
     int i;
-    for( i=0; i<dados.length && dados[i] != (byte) 0; i++);
+    for (i = 0; i < dados.length && dados[i] != (byte) 0; i++) ;
 
     return "[List] -> SEQ:" + msg[1] + "; SEG: " + msg[2] + "; MSG: " //Metadados";
         + new String(Arrays.copyOfRange(dados, 0, i));

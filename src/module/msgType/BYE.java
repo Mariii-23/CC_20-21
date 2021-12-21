@@ -118,7 +118,7 @@ public class BYE implements MSG_interface {
         ack.received();
         ackFail = true;
       } catch (TimeOutMsgException | AckErrorException e) {
-        if(i > 3)
+        if (i > 3)
           throw new TimeOutMsgException();
         packet.setPort(port);
         socket.send(packet);

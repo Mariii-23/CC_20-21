@@ -89,7 +89,7 @@ public class ControlMsgWithChangePorts implements Runnable {
         e.printStackTrace();
       } catch (AckErrorException e) {
         e.printStackTrace();
-      } catch (AutenticationFailed ignored){
+      } catch (AutenticationFailed ignored) {
         log.status.endProgram();
         return;
       }

@@ -19,36 +19,36 @@ public class main {
     }
     String ip = args[0];
     try {
-      InetAddress.getByName( ip );
+      InetAddress.getByName(ip);
     } catch (UnknownHostException ignored) {
-      System.out.println("IP: "+ip+ " is not valid\n");
+      System.out.println("IP: " + ip + " is not valid\n");
       return;
     }
 
     String path = args[1];
     try {
       if (!Files.isDirectory(Path.of(path))) {
-        System.out.println("PATH -> "+path+" dont exist or is not a directory");
+        System.out.println("PATH -> " + path + " dont exist or is not a directory");
         return;
       }
-    } catch (InvalidPathException ignored){
-        System.out.println("PATH -> "+path+" is an invalid path");
-        return;
+    } catch (InvalidPathException ignored) {
+      System.out.println("PATH -> " + path + " is an invalid path");
+      return;
     }
 
     String pathLogins = path + '/' + Constantes.PATHS.LOGINS;
     try {
       if (!Files.exists(Path.of(pathLogins))) {
-        System.out.println("PATH LOGINS -> " + pathLogins +" dont exist or is not a directory\n");
+        System.out.println("PATH LOGINS -> " + pathLogins + " dont exist or is not a directory\n");
         return;
       }
-    } catch (InvalidPathException ignored){
+    } catch (InvalidPathException ignored) {
       System.out.println("PATH LOGINS -> " + pathLogins + " is an invalid path");
       return;
     }
 
     Information status = new Information(path);
-    Log log = new Log(path , status);
+    Log log = new Log(path, status);
 
     Communication c = new Communication(status, ip, path, log);
     Listening l = new Listening(status, path);

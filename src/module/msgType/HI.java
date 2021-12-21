@@ -12,7 +12,6 @@ import module.status.SeqPedido;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 public class HI implements MSG_interface {
 
@@ -80,7 +79,7 @@ public class HI implements MSG_interface {
   }
 
   public void createTailPacket(byte[] buff) {
- //   var key = log.status.generateKey();
+    //   var key = log.status.generateKey();
     byte[] msgByte;
     if (msgToSend == null)
       msgByte = "ERROR_NOTHING_SEND;;".getBytes(StandardCharsets.UTF_8);
@@ -91,7 +90,7 @@ public class HI implements MSG_interface {
     int i;
     for (i = Constantes.CONFIG.HEAD_SIZE; i2 < msgByte.length; i++, i2++)
       buff[i] = msgByte[i2];
-    for ( ; i < buff.length; i++ )
+    for (; i < buff.length; i++)
       buff[i] = (byte) 0;
   }
 
@@ -112,15 +111,15 @@ public class HI implements MSG_interface {
   }
 
   //TODO
-  public boolean validadeAutentication(DatagramPacket packet){
+  public boolean validadeAutentication(DatagramPacket packet) {
 
-    var msg = new String(MSG_interface.getDataMsg(packet),StandardCharsets.UTF_8);
+    var msg = new String(MSG_interface.getDataMsg(packet), StandardCharsets.UTF_8);
     //System.out.println(msg);
-    var reciviedeValue = msg.split(";;",0)[0];
+    var reciviedeValue = msg.split(";;", 0)[0];
     reciviedeValue = reciviedeValue.replace(";;", "");
     //System.out.println("RECEBI o valor :" + reciviedeValue);
 
-    return log.status.validate(msgToSend,reciviedeValue);
+    return log.status.validate(msgToSend, reciviedeValue);
   }
 
   public void sendFirst(DatagramSocket socket) throws IOException {
@@ -132,8 +131,8 @@ public class HI implements MSG_interface {
     seq++;
   }
 
-  public void atualizaMsgToSend( String key ) {
-    if( key == null ) {
+  public void atualizaMsgToSend(String key) {
+    if (key == null) {
       this.msgToSend = log.status.generateKey();
       //System.out.println(msgToSend);
       //this.key = msgToSend;
@@ -175,13 +174,14 @@ public class HI implements MSG_interface {
         //TODO chamar controlo de fluxo
         // mais q 3 vezes e ele manda um package error
       } else {
-        if( !validadeAutentication(receivedPacket)){
+        if (!validadeAutentication(receivedPacket)) {
           //System.out.println("erro ao autenticar");
           log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
-          BYE bye = new BYE( packet,clientIP,port,socket,seqPedido, log.status, log);
+          BYE bye = new BYE(packet, clientIP, port, socket, seqPedido, log.status, log);
           try {
             bye.send();
-          } catch (TimeOutMsgException ignored) {}
+          } catch (TimeOutMsgException ignored) {
+          }
           throw new AutenticationFailed();
         }
         //System.out.println("RECEBI: " + HI.toString(receivedPacket));
@@ -246,9 +246,9 @@ public class HI implements MSG_interface {
         // FLUXO de congestao
         if (hiReceved) {
           log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
-          var msg = new String(MSG_interface.getDataMsg(receivedPacket),StandardCharsets.UTF_8);
+          var msg = new String(MSG_interface.getDataMsg(receivedPacket), StandardCharsets.UTF_8);
           //System.out.println(msg);
-          var reciviedeKey = msg.split(";;",0)[0];
+          var reciviedeKey = msg.split(";;", 0)[0];
           reciviedeKey = reciviedeKey.replace(";;", "");
           atualizaMsgToSend(reciviedeKey);
         }
@@ -278,7 +278,7 @@ public class HI implements MSG_interface {
           // vamos diminuindo o tempo de receber cenas
           continue;
         } catch (PackageErrorException e1) {
-          ACK ack1 = new ACK(ack.getPacket(),port,socket,clientIP,seq,log);
+          ACK ack1 = new ACK(ack.getPacket(), port, socket, clientIP, seq, log);
           ack1.send();
           throw new AutenticationFailed();
         } catch (AckErrorException e2) {

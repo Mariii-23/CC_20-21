@@ -37,22 +37,22 @@ public class Communication implements Runnable {
     this.seqPedido = new SeqPedido();
   }
 
-  private void connect() throws AutenticationFailed{
+  private void connect() throws AutenticationFailed {
+    try {
+      iniciarConecao();
+    } catch (SocketTimeoutException e) {
       try {
-        iniciarConecao();
-      } catch (SocketTimeoutException e) {
-        try {
-          confirmarConecao();
-        } catch (AutenticationFailed ignored) {
-          throw new AutenticationFailed();
-        } catch (Exception e3) {
-          e3.printStackTrace();
-        }
+        confirmarConecao();
       } catch (AutenticationFailed ignored) {
         throw new AutenticationFailed();
-      } catch (Exception ioException) {
-        ioException.printStackTrace();
+      } catch (Exception e3) {
+        e3.printStackTrace();
       }
+    } catch (AutenticationFailed ignored) {
+      throw new AutenticationFailed();
+    } catch (Exception ioException) {
+      ioException.printStackTrace();
+    }
   }
 
   private void confirmarConecao() throws IOException, AutenticationFailed {
@@ -82,7 +82,7 @@ public class Communication implements Runnable {
   public void run() {
     try {
       connect();
-    } catch (AutenticationFailed ignored){
+    } catch (AutenticationFailed ignored) {
       System.out.println("A Autenticação falhou\nA terminar ligação");
       close();
       status.endProgram();
@@ -92,17 +92,22 @@ public class Communication implements Runnable {
     ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status, socket, pathDir, clientIP, seqPedido, log);
     SynchronizeDirectory synchronizeDirectory =
         new SynchronizeDirectory(status, socket, pathDir, clientIP, port, seqPedido, log);
-    Thread[] threads = new Thread[3];
+    RunMenu menu = new RunMenu(status);
+    Thread[] threads = new Thread[4];
     threads[0] = new Thread(receveidAndTreat);
     threads[1] = new Thread(synchronizeDirectory);
     threads[2] = new Thread(log);
+    threads[3] = new Thread(menu);
+    threads[3].start();
     threads[2].start();
     threads[0].start();
     threads[1].start();
     try {
-      threads[0].join();
-      threads[1].join();
-      threads[2].join();
+      for (var thread : threads)
+        thread.join();
+      //threads[0].join();
+      //threads[1].join();
+      //threads[2].join();
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
