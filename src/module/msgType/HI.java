@@ -177,6 +177,11 @@ public class HI implements MSG_interface {
       } else {
         if( !validadeAutentication(receivedPacket)){
           //System.out.println("erro ao autenticar");
+          log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
+          BYE bye = new BYE( packet,clientIP,port,socket,seqPedido, log.status, log);
+          try {
+            bye.send();
+          } catch (TimeOutMsgException ignored) {}
           throw new AutenticationFailed();
         }
         //System.out.println("RECEBI: " + HI.toString(receivedPacket));
@@ -191,7 +196,6 @@ public class HI implements MSG_interface {
   public void send(DatagramSocket socket) throws IOException, SocketTimeoutException, PackageErrorException {
 
     var sendPackage = createPacket(seqPedido.getSeq(), seq);
-    System.out.println("Vou mandar por aqui -> " + port);
     this.socket.send(sendPackage);
     seq++;
 
@@ -225,7 +229,7 @@ public class HI implements MSG_interface {
     }
   }
 
-  public void received() throws IOException {
+  public void received() throws IOException, AutenticationFailed {
 
     boolean hiReceved = false;
 
@@ -274,9 +278,9 @@ public class HI implements MSG_interface {
           // vamos diminuindo o tempo de receber cenas
           continue;
         } catch (PackageErrorException e1) {
-          // TODO controlo de fluxo
-          // a partir de x pacotes errados, fechamos a conecao
-          continue;
+          ACK ack1 = new ACK(ack.getPacket(),port,socket,clientIP,seq,log);
+          ack1.send();
+          throw new AutenticationFailed();
         } catch (AckErrorException e2) {
           break;
         }

@@ -23,7 +23,7 @@ public class BYE implements MSG_interface {
   private Byte seq = (byte) 0;
   private final SeqPedido seqPedido;
 
-  private final Type type = Type.Get;
+  private final Type type = Type.Bye;
 
   private final Information information;
   private DatagramPacket packet;
@@ -93,8 +93,8 @@ public class BYE implements MSG_interface {
   }
 
   @Override
-  public void send() throws IOException, PackageErrorException {
-    DatagramPacket packet = createPacket();
+  public void send() throws IOException, PackageErrorException, TimeOutMsgException {
+    this.packet = createPacket();
     socket.send(packet);
     log.addQueueSend(MSG_interface.MSGToString(packet));
     send(this.socket);
@@ -109,19 +109,23 @@ public class BYE implements MSG_interface {
   }
 
   @Override
-  public void send(DatagramSocket socket) throws IOException, PackageErrorException {
+  public void send(DatagramSocket socket) throws IOException, PackageErrorException, TimeOutMsgException {
     ACK ack = new ACK(this.packet, port, socket, clientIP, seq, log);
     boolean ackFail = false;
+    int i = 0;
     while (!ackFail) {
       try {
         ack.received();
         ackFail = true;
       } catch (TimeOutMsgException | AckErrorException e) {
+        if(i > 3)
+          throw new TimeOutMsgException();
         packet.setPort(port);
         socket.send(packet);
         log.addQueueSend(MSG_interface.MSGToString(packet));
+        //i++;
       } catch (PackageErrorException e1) {
-        break;
+        throw e1;
       }
     }
   }

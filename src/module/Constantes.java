@@ -36,7 +36,7 @@ public class Constantes {
     /**
      * Tamanho default do Buffer
      */
-    public static int BUFFER_SIZE = 1024;
+    public static int BUFFER_SIZE = 1460;
     public static int HEAD_SIZE = 3;
     public static int TAIL_SIZE = BUFFER_SIZE - HEAD_SIZE;
     /**

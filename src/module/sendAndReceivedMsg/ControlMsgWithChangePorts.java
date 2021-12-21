@@ -2,6 +2,7 @@ package module.sendAndReceivedMsg;
 
 import interfaces.MSG_interface;
 import module.exceptions.AckErrorException;
+import module.exceptions.AutenticationFailed;
 import module.exceptions.PackageErrorException;
 import module.exceptions.TimeOutMsgException;
 import module.log.Log;
@@ -88,6 +89,9 @@ public class ControlMsgWithChangePorts implements Runnable {
         e.printStackTrace();
       } catch (AckErrorException e) {
         e.printStackTrace();
+      } catch (AutenticationFailed ignored){
+        log.status.endProgram();
+        return;
       }
 
 
@@ -96,7 +100,7 @@ public class ControlMsgWithChangePorts implements Runnable {
         msg_interface.send(socket);
       } catch (IOException e) {
         e.printStackTrace();
-      } catch (PackageErrorException e) {
+      } catch (PackageErrorException | TimeOutMsgException e) {
         e.printStackTrace();
       }
     }

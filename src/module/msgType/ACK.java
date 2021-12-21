@@ -125,9 +125,13 @@ public class ACK implements MSG_interface {
     DatagramPacket dpac = new DatagramPacket(buff, buff.length);
     try {
       socket.receive(dpac);
+      this.packet = dpac;
     } catch (SocketTimeoutException e) {
       throw new TimeOutMsgException("Tempo de resposta ultrapassado");
     }
+
+    if (dpac.getData() == null)
+      throw new PackageErrorException("Mensagem a nulo");
 
     if (!validType(dpac))
       throw new PackageErrorException("Mensagem recebida nao é do tipo ack");

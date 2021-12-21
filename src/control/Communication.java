@@ -31,7 +31,6 @@ public class Communication implements Runnable {
   public Communication(Information status, String clientIP, String pathDir, Log log) throws UnknownHostException {
     this.status = status;
     this.log = log;
-    //this.serverIP = InetAddress.getByName(clientIP);
     this.clientIP = InetAddress.getByName(clientIP);
     this.port = Constantes.CONFIG.PORT_UDP;
     this.pathDir = pathDir;
@@ -39,23 +38,24 @@ public class Communication implements Runnable {
   }
 
   private void connect() throws AutenticationFailed{
-    try {
-      iniciarConecao();
-    } catch (SocketTimeoutException e) {
       try {
-        confirmarConecao();
-      } catch (Exception e3) {
-        e3.printStackTrace();
+        iniciarConecao();
+      } catch (SocketTimeoutException e) {
+        try {
+          confirmarConecao();
+        } catch (AutenticationFailed ignored) {
+          throw new AutenticationFailed();
+        } catch (Exception e3) {
+          e3.printStackTrace();
+        }
+      } catch (AutenticationFailed ignored) {
+        throw new AutenticationFailed();
+      } catch (Exception ioException) {
+        ioException.printStackTrace();
       }
-    } catch ( AutenticationFailed ignored ){
-      throw new AutenticationFailed();
-    }
-    catch (Exception ioException) {
-      ioException.printStackTrace();
-    }
   }
 
-  private void confirmarConecao() throws IOException {
+  private void confirmarConecao() throws IOException, AutenticationFailed {
     seqPedido = new SeqPedido((byte) 10);
     System.out.println("servidor");
     HI HiMSG = new HI(clientIP, port, socket, seqPedido, log);
@@ -83,11 +83,12 @@ public class Communication implements Runnable {
     try {
       connect();
     } catch (AutenticationFailed ignored){
-      System.out.println("A Autenticação falhou");
+      System.out.println("A Autenticação falhou\nA terminar ligação");
       close();
       status.endProgram();
       return;
     }
+
     ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status, socket, pathDir, clientIP, seqPedido, log);
     SynchronizeDirectory synchronizeDirectory =
         new SynchronizeDirectory(status, socket, pathDir, clientIP, port, seqPedido, log);

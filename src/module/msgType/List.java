@@ -371,11 +371,12 @@ public class List implements MSG_interface {
     LinkedList<Thread> threads = new LinkedList<>();
     if (filesToReceive != null)
       for (var elem : filesToReceive) {
-        if (elem.equals(Constantes.PATHS.LOG_NAME_FILE) ||
-            elem.equals(Constantes.PATHS.LOG_Time_NAME_FILE) ||
-            elem.equals(Constantes.PATHS.LOG_Received_NAME_FILE) ||
-            elem.equals(Constantes.PATHS.LOGINS)
-        )
+        //if (elem.equals(Constantes.PATHS.LOG_NAME_FILE) ||
+        //    elem.equals(Constantes.PATHS.LOG_Time_NAME_FILE) ||
+        //    elem.equals(Constantes.PATHS.LOG_Received_NAME_FILE) ||
+        //    elem.equals(Constantes.PATHS.LOGINS)
+        //)
+        if (log.status.equalFileToIgnored(elem))
           continue;
         FileStruct file = new FileStruct(new File(elem));
         GET getMsg = new GET(clientIP, portPrincipal, socket, controlSeqPedido, file, path, log);

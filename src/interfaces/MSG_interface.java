@@ -92,11 +92,11 @@ public interface MSG_interface {
     return buff;
   }
 
-  void send() throws IOException, PackageErrorException, AutenticationFailed;
+  void send() throws IOException, PackageErrorException, AutenticationFailed, TimeOutMsgException;
 
-  void send(DatagramSocket socket) throws IOException, PackageErrorException;
+  void send(DatagramSocket socket) throws IOException, PackageErrorException, TimeOutMsgException;
 
-  void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException;
+  void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException, AutenticationFailed;
 
   static MSG_interface createMsg(DatagramPacket packet, DatagramSocket socket, SeqPedido seq, String dir,
                                  Information information, Log log)

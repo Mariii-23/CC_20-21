@@ -3,6 +3,8 @@ package module.status;
 import module.Constantes;
 import module.logins.Login;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Information {
@@ -11,6 +13,8 @@ public class Information {
 
   private final Login login;
   private final String pathDir;
+  private final Set<String> filesToIgnored;
+  private final ReentrantLock lFiles;
 
   public Information(String pathDir) {
     this.pathDir = pathDir;
@@ -18,7 +22,40 @@ public class Information {
     this.terminated = false;
     this.login = new Login(pathDir + '/' + Constantes.PATHS.LOGINS );
     login.readAutenticationFile();
+    this.filesToIgnored = new HashSet<>();
+    this.lFiles = new ReentrantLock(); initFilesToIgnored();
   }
+
+  private void initFilesToIgnored() {
+    try {
+      lFiles.lock();
+      this.filesToIgnored.add(Constantes.PATHS.LOG_NAME_FILE);
+      this.filesToIgnored.add(Constantes.PATHS.LOGINS);
+      this.filesToIgnored.add(Constantes.PATHS.LOG_Received_NAME_FILE);
+      this.filesToIgnored.add(Constantes.PATHS.LOG_Time_NAME_FILE);
+    } finally {
+      lFiles.unlock();
+    }
+  }
+
+  public Boolean equalFileToIgnored(String filename) {
+    try {
+      lFiles.lock();
+      return this.filesToIgnored.contains(filename);
+    } finally {
+      lFiles.unlock();
+    }
+  }
+
+  public void addFileToIgnored(String filename) {
+    try {
+      lFiles.lock();
+      this.filesToIgnored.add(filename);
+    } finally {
+      lFiles.unlock();
+    }
+  }
+
 
   public void endProgram() {
     try {

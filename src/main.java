@@ -38,12 +38,12 @@ public class main {
 
     String pathLogins = path + '/' + Constantes.PATHS.LOGINS;
     try {
-      if (Files.isDirectory(Path.of(pathLogins))) {
+      if (!Files.exists(Path.of(pathLogins))) {
         System.out.println("PATH LOGINS -> " + pathLogins +" dont exist or is not a directory\n");
         return;
       }
     } catch (InvalidPathException ignored){
-      System.out.println("PATH LOGINS -> "+pathLogins+" is an invalid path");
+      System.out.println("PATH LOGINS -> " + pathLogins + " is an invalid path");
       return;
     }
 
