@@ -4,7 +4,6 @@ import module.HTTP.Listening;
 import module.log.Log;
 import module.status.Information;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -37,7 +36,18 @@ public class main {
         return;
     }
 
-    Information status = new Information();
+    String pathLogins = path + '/' + Constantes.PATHS.LOGINS;
+    try {
+      if (Files.isDirectory(Path.of(pathLogins))) {
+        System.out.println("PATH LOGINS -> " + pathLogins +" dont exist or is not a directory\n");
+        return;
+      }
+    } catch (InvalidPathException ignored){
+      System.out.println("PATH LOGINS -> "+pathLogins+" is an invalid path");
+      return;
+    }
+
+    Information status = new Information(path);
     Log log = new Log(path , status);
 
     Communication c = new Communication(status, ip, path, log);

@@ -1,8 +1,9 @@
 package module.logins;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.Scanner;
 
 public class Login {
   private final HashMap<String, String> combination;
@@ -14,15 +15,19 @@ public class Login {
   }
 
   public void readAutenticationFile() {
-    String[] temparr = new String[2];
-
-    Scanner myReader = new Scanner(fileName);
-    while (myReader.hasNextLine()) {
-      String data = myReader.nextLine();
-      temparr = data.split(";", 2);
+    try {
+    File file=new File(fileName);
+    FileReader fr = new FileReader(file);
+    BufferedReader br=new BufferedReader(fr);
+    String line;
+    while((line=br.readLine())!=null) {
+      var temparr = line.split(";", 2);
       combination.put(temparr[0], temparr[1]);
     }
-    myReader.close();
+    fr.close();    //closes the stream and release the resources
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   public boolean validate(String givenKey, String recievedValue) {
@@ -33,10 +38,25 @@ public class Login {
     return combination.get(key);
   }
 
-  public String generateKey() {
+  private int randomNumber() {
     Random r = new Random();
-    return combination.get(combination.get(r.nextInt(combination.size())));
+    return r.nextInt(combination.size());
+  }
+
+  public String generateKey() {
+    int random = randomNumber();
+    int i = 0;
+    for( var elem : combination.keySet())
+      if (i == random) return elem;
+      else i++;
+    return null;
   }
 
 
+  //public static void main(String[] args) {
+  //  var login = new Login("/home/mari/uni-projetos/CC_TP2/tmp/logins.txt");
+  //  login.readAutenticationFile();
+  //
+  //
+  //}
 }

@@ -2,6 +2,7 @@ package interfaces;
 
 import module.Constantes;
 import module.exceptions.AckErrorException;
+import module.exceptions.AutenticationFailed;
 import module.exceptions.PackageErrorException;
 import module.exceptions.TimeOutMsgException;
 import module.log.Log;
@@ -91,7 +92,7 @@ public interface MSG_interface {
     return buff;
   }
 
-  void send() throws IOException, PackageErrorException;
+  void send() throws IOException, PackageErrorException, AutenticationFailed;
 
   void send(DatagramSocket socket) throws IOException, PackageErrorException;
 

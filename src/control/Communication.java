@@ -1,6 +1,7 @@
 package control;
 
 import module.Constantes;
+import module.exceptions.AutenticationFailed;
 import module.exceptions.PackageErrorException;
 import module.log.Log;
 import module.msgType.HI;
@@ -37,7 +38,7 @@ public class Communication implements Runnable {
     this.seqPedido = new SeqPedido();
   }
 
-  private void connect() {
+  private void connect() throws AutenticationFailed{
     try {
       iniciarConecao();
     } catch (SocketTimeoutException e) {
@@ -46,7 +47,10 @@ public class Communication implements Runnable {
       } catch (Exception e3) {
         e3.printStackTrace();
       }
-    } catch (Exception ioException) {
+    } catch ( AutenticationFailed ignored ){
+      throw new AutenticationFailed();
+    }
+    catch (Exception ioException) {
       ioException.printStackTrace();
     }
   }
@@ -58,7 +62,7 @@ public class Communication implements Runnable {
     HiMSG.received();
   }
 
-  private void iniciarConecao() throws IOException {
+  private void iniciarConecao() throws IOException, AutenticationFailed {
     socket = new DatagramSocket(port);
 
     // TODO ver melhor o tempo
@@ -76,7 +80,14 @@ public class Communication implements Runnable {
 
   @Override
   public void run() {
-    connect();
+    try {
+      connect();
+    } catch (AutenticationFailed ignored){
+      System.out.println("A Autenticação falhou");
+      close();
+      status.endProgram();
+      return;
+    }
     ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status, socket, pathDir, clientIP, seqPedido, log);
     SynchronizeDirectory synchronizeDirectory =
         new SynchronizeDirectory(status, socket, pathDir, clientIP, port, seqPedido, log);
@@ -94,7 +105,7 @@ public class Communication implements Runnable {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    //status.endProgram();
+    status.endProgram();
     close();
   }
 

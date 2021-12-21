@@ -21,6 +21,12 @@ public class Constantes {
      * Default path para o CSS que será usado no HTML
      */
     public static String STYLE_CSS = "style.css";
+
+    public static String LOGINS = ".logins";
+
+    public static String LOG_NAME_FILE = ".log";
+    public static String LOG_Time_NAME_FILE = ".logTime";
+    public static String LOG_Received_NAME_FILE = ".logReceived";
   }
 
   /**
@@ -40,9 +46,6 @@ public class Constantes {
     public static int PORT_HTTP = 8080;
 
     public static String SERVER_NAME = "Grupo 6";
-    public static String LOG_NAME_FILE = ".log";
-    public static String LOG_Time_NAME_FILE = ".logTime";
-    public static String LOG_Received_NAME_FILE = ".logReceived";
   }
 
   public static class PHRASES {

@@ -15,6 +15,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class GET implements MSG_interface {
 
@@ -222,8 +223,11 @@ public class GET implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
+    byte[] dados = MSG_interface.getDataMsg(packet);
+    int i;
+    for( i=0; i<dados.length && dados[i] != (byte) 0; i++);
     return "[GET]  -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG: "
-        + new String(MSG_interface.getDataMsg(packet));
+        + new String(Arrays.copyOfRange(dados,0,i));
   }
 
   @Override

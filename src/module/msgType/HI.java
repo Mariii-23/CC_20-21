@@ -3,6 +3,7 @@ package module.msgType;
 import interfaces.MSG_interface;
 import module.Constantes;
 import module.exceptions.AckErrorException;
+import module.exceptions.AutenticationFailed;
 import module.exceptions.PackageErrorException;
 import module.exceptions.TimeOutMsgException;
 import module.log.Log;
@@ -10,6 +11,8 @@ import module.status.SeqPedido;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class HI implements MSG_interface {
 
@@ -26,6 +29,9 @@ public class HI implements MSG_interface {
   private SeqPedido seqPedido;
 
   boolean know_port;
+
+  //private String key;
+  private String msgToSend;
 
   public HI(InetAddress clientIp, int port, DatagramSocket socket, SeqPedido seq, Log log) throws SocketException {
     this.log = log;
@@ -74,11 +80,19 @@ public class HI implements MSG_interface {
   }
 
   public void createTailPacket(byte[] buff) {
-    String msg = "HI";
-    byte[] msgByte = msg.getBytes();
+ //   var key = log.status.generateKey();
+    byte[] msgByte;
+    if (msgToSend == null)
+      msgByte = "ERROR_NOTHING_SEND;;".getBytes(StandardCharsets.UTF_8);
+    else
+      msgByte = (msgToSend + ";;").getBytes(StandardCharsets.UTF_8);
 
-    for (int i = Constantes.CONFIG.HEAD_SIZE; i < msgByte.length; i++)
-      buff[i] = msgByte[i - 2];
+    int i2 = 0;
+    int i;
+    for (i = Constantes.CONFIG.HEAD_SIZE; i2 < msgByte.length; i++, i2++)
+      buff[i] = msgByte[i2];
+    for ( ; i < buff.length; i++ )
+      buff[i] = (byte) 0;
   }
 
   //@Override
@@ -97,7 +111,20 @@ public class HI implements MSG_interface {
     return msg[0] == Type.Hi.getBytes();
   }
 
+  //TODO
+  public boolean validadeAutentication(DatagramPacket packet){
+
+    var msg = new String(MSG_interface.getDataMsg(packet),StandardCharsets.UTF_8);
+    //System.out.println(msg);
+    var reciviedeValue = msg.split(";;",0)[0];
+    reciviedeValue = reciviedeValue.replace(";;", "");
+    //System.out.println("RECEBI o valor :" + reciviedeValue);
+
+    return log.status.validate(msgToSend,reciviedeValue);
+  }
+
   public void sendFirst(DatagramSocket socket) throws IOException {
+    atualizaMsgToSend(null);
     var sendPackage = createPacket(seqPedido.getSeq(), seq);
     socket.send(sendPackage);
     log.addQueueSend(MSG_interface.MSGToString(packet));
@@ -105,7 +132,23 @@ public class HI implements MSG_interface {
     seq++;
   }
 
-  public void send() throws IOException, PackageErrorException {
+  public void atualizaMsgToSend( String key ) {
+    if( key == null ) {
+      this.msgToSend = log.status.generateKey();
+      //System.out.println(msgToSend);
+      //this.key = msgToSend;
+      //System.out.println("KEY ->" + msgToSend);
+    } else {
+      //System.out.println("Key received ->" + key);
+      this.msgToSend = log.status.getValue(key);
+      if (msgToSend == null)
+        msgToSend = "ERROR";
+      //System.out.println("Value ->" + msgToSend);
+    }
+  }
+
+  public void send() throws IOException, PackageErrorException, AutenticationFailed {
+    atualizaMsgToSend(null);
 
     //TODO mudar esta parte
     var sendPackage = createPacket(seqPedido.getSeq(), seq);
@@ -132,6 +175,10 @@ public class HI implements MSG_interface {
         //TODO chamar controlo de fluxo
         // mais q 3 vezes e ele manda um package error
       } else {
+        if( !validadeAutentication(receivedPacket)){
+          //System.out.println("erro ao autenticar");
+          throw new AutenticationFailed();
+        }
         //System.out.println("RECEBI: " + HI.toString(receivedPacket));
         log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
         ACK ack = new ACK(receivedPacket, port, socket, clientIP, seqPedido.getSeq(), log);
@@ -157,6 +204,7 @@ public class HI implements MSG_interface {
     while (!receveidPackage) {
       try {
         this.socket.receive(receivedPacket);
+        //validateAutentication(receivedPacket);
         if (!know_port)
           port = receivedPacket.getPort();
 
@@ -192,8 +240,14 @@ public class HI implements MSG_interface {
         hiReceved = validType(receivedPacket);
         //TODO se for falso varias vezes temos q fazer algo
         // FLUXO de congestao
-        if (hiReceved) //System.out.println("RECEBI: " + HI.toString(receivedPacket));
+        if (hiReceved) {
           log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
+          var msg = new String(MSG_interface.getDataMsg(receivedPacket),StandardCharsets.UTF_8);
+          //System.out.println(msg);
+          var reciviedeKey = msg.split(";;",0)[0];
+          reciviedeKey = reciviedeKey.replace(";;", "");
+          atualizaMsgToSend(reciviedeKey);
+        }
 
       } catch (SocketTimeoutException e) {
         // TODO fluxo de congestao
@@ -239,6 +293,10 @@ public class HI implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
-    return "[HI]   -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG:  HI;";
+    //var msg_ = MSG_interface.getDataMsg(packet);
+    //int i =0;
+    //for (; i < msg_.length && msg_[i] != (byte) 0; i++);
+    //var reciviedeKey = new String(Arrays.copyOfRange(msg,0,i));
+    return "[HI]   -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG: HI"; //+ reciviedeKey;
   }
 }

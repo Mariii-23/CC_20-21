@@ -371,9 +371,11 @@ public class List implements MSG_interface {
     LinkedList<Thread> threads = new LinkedList<>();
     if (filesToReceive != null)
       for (var elem : filesToReceive) {
-        if (elem.equals(Constantes.CONFIG.LOG_NAME_FILE) ||
-        elem.equals(Constantes.CONFIG.LOG_Time_NAME_FILE) ||
-        elem.equals(Constantes.CONFIG.LOG_Received_NAME_FILE))
+        if (elem.equals(Constantes.PATHS.LOG_NAME_FILE) ||
+            elem.equals(Constantes.PATHS.LOG_Time_NAME_FILE) ||
+            elem.equals(Constantes.PATHS.LOG_Received_NAME_FILE) ||
+            elem.equals(Constantes.PATHS.LOGINS)
+        )
           continue;
         FileStruct file = new FileStruct(new File(elem));
         GET getMsg = new GET(clientIP, portPrincipal, socket, controlSeqPedido, file, path, log);
@@ -403,7 +405,11 @@ public class List implements MSG_interface {
 
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
+    byte[] dados = MSG_interface.getDataMsg(packet);
+    int i;
+    for( i=0; i<dados.length && dados[i] != (byte) 0; i++);
+
     return "[List] -> SEQ:" + msg[1] + "; SEG: " + msg[2] + "; MSG: " //Metadados";
-        + new String(MSG_interface.getDataMsg(packet));
+        + new String(Arrays.copyOfRange(dados, 0, i));
   }
 }

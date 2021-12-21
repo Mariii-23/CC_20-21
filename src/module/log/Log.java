@@ -23,18 +23,18 @@ public class Log implements Runnable, Closeable {
   private final ReentrantLock lFileLogTime;
   private final BufferedWriter fileLogReceived;
   private final ReentrantLock lFileLogReceived;
-  private final Information status;
+  public final Information status;
 
   public Log(String path, Information information) throws IOException {
     queue = new LinkedList<>();
     l = new ReentrantLock();
     c = l.newCondition();
     lFileLog = new ReentrantLock();
-    fileLog = new BufferedWriter(new FileWriter(path + '/' + Constantes.CONFIG.LOG_NAME_FILE));
+    fileLog = new BufferedWriter(new FileWriter(path + '/' + Constantes.PATHS.LOG_NAME_FILE));
     lFileLogTime = new ReentrantLock();
-    fileLogTime = new BufferedWriter(new FileWriter(path + '/' + Constantes.CONFIG.LOG_Time_NAME_FILE));
+    fileLogTime = new BufferedWriter(new FileWriter(path + '/' + Constantes.PATHS.LOG_Time_NAME_FILE));
     lFileLogReceived = new ReentrantLock();
-    fileLogReceived = new BufferedWriter(new FileWriter(path + '/' + Constantes.CONFIG.LOG_Received_NAME_FILE));
+    fileLogReceived = new BufferedWriter(new FileWriter(path + '/' + Constantes.PATHS.LOG_Received_NAME_FILE));
     status = information;
   }
 
