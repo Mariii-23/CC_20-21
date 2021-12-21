@@ -49,6 +49,7 @@ public class SynchronizeDirectory implements Runnable {
   public void run() {
     //System.out.println("Send first list");
     sendList();
+    System.out.println("Pasta sincronizada deste lado");
     try {
       Thread.sleep(60000);
     } catch (InterruptedException e) {

@@ -342,8 +342,9 @@ public class List implements MSG_interface {
           i++;
           segFileReceved = validType(receivedPacket);
           if (segFileReceved) {
-            System.out.print("RECEBI: ");
-            MSG_interface.printMSG(receivedPacket);
+            //System.out.print("RECEBI: ");
+            //MSG_interface.printMSG(receivedPacket);
+            log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
             ACK ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq(), log);
             ack.send();
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
@@ -364,13 +365,15 @@ public class List implements MSG_interface {
 
     HashMap<String, FileStruct> hf = createFileMap(sb.toString());
     ArrayList<String> filesToReceive = dir.compareDirectories(hf);
-    if (filesToReceive != null)
-      System.out.println("files to receive: " + filesToReceive);
+    //if (filesToReceive != null)
+    //  System.out.println("files to receive: " + filesToReceive);
     var portPrincipal = Constantes.CONFIG.PORT_UDP;
     LinkedList<Thread> threads = new LinkedList<>();
     if (filesToReceive != null)
       for (var elem : filesToReceive) {
-        if (elem.equals(Constantes.CONFIG.LOG_NAME_FILE))
+        if (elem.equals(Constantes.CONFIG.LOG_NAME_FILE) ||
+        elem.equals(Constantes.CONFIG.LOG_Time_NAME_FILE) ||
+        elem.equals(Constantes.CONFIG.LOG_Received_NAME_FILE))
           continue;
         FileStruct file = new FileStruct(new File(elem));
         GET getMsg = new GET(clientIP, portPrincipal, socket, controlSeqPedido, file, path, log);

@@ -38,7 +38,7 @@ public class main {
     }
 
     Information status = new Information();
-    Log log = new Log(path + '/' + Constantes.CONFIG.LOG_NAME_FILE, status);
+    Log log = new Log(path , status);
 
     Communication c = new Communication(status, ip, path, log);
     Listening l = new Listening(status, path);

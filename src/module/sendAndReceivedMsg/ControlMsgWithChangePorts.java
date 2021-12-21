@@ -57,8 +57,9 @@ public class ControlMsgWithChangePorts implements Runnable {
   @Override
   public void run() {
     if (!is_send) {
-      System.out.println("RECEBI: ");
-      System.out.println(msg_interface.toString());
+      //System.out.println("RECEBI: ");
+      //System.out.println(msg_interface.toString());
+      log.addQueueReceived(msg_interface.toString());
 
       //System.out.println("Vou mandar o ack para a porta " + clientPort);
       ACK ack;
@@ -88,6 +89,7 @@ public class ControlMsgWithChangePorts implements Runnable {
       } catch (AckErrorException e) {
         e.printStackTrace();
       }
+
 
     } else {
       try {

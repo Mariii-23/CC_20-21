@@ -39,6 +39,7 @@ public class SEND implements MSG_interface {
 
   private long lastModification = 0;
   private int lastSizeRead = 0;
+  private int sizeFile = 0;
 
   public SEND(InetAddress clientIp, int port, DatagramSocket socket, SeqPedido seqPedido, String fileName, String dir,
               Log log) {
@@ -167,7 +168,8 @@ public class SEND implements MSG_interface {
       // mandar um bye
       return;
     }
-
+    //TODO comecar a ler o tempo
+    var startTime = System.currentTimeMillis();
     for (var elem = packets.remove(); elem != null; ) {
       socket.send(elem);
       log.addQueueSend(MSG_interface.MSGToString(elem));
@@ -219,6 +221,15 @@ public class SEND implements MSG_interface {
       ack.send();
     } catch (Exception e) {
     }
+
+    //TODO acabar o tempo
+    var endTime = System.currentTimeMillis();
+    var time = (endTime-startTime) / 1000 ;
+    var bitsSec = sizeFile * 8L ;
+    if (time > 0) bitsSec = bitsSec / time;
+    var s = "[SEND] Name: " +fileName + " || Size: " + sizeFile  + " || Time (sec): " + time +
+        " || Bits/sec: " + bitsSec;
+    log.addQueueTime(s);
   }
 
   public void writeFile(Queue<byte[]> array, long lastModification) throws IOException {
@@ -342,8 +353,9 @@ public class SEND implements MSG_interface {
 
           segFileReceved = validType(receivedPacket);
           if (segFileReceved) {
-            System.out.print("RECEBI: ");
-            MSG_interface.printMSG(receivedPacket);
+            //System.out.print("RECEBI: ");
+            //MSG_interface.printMSG(receivedPacket);
+            log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
             ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq(), log);
             ack.send();
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
@@ -437,6 +449,7 @@ public class SEND implements MSG_interface {
     try {
       while (-1 != (sizeRead = in.read(buff))) {
         lastSize = sizeRead;
+        this.sizeFile += sizeRead;
         for (; sizeRead < size; sizeRead++)
           buff[sizeRead] = (byte) 0;
         fileInBytes.add(buff.clone());

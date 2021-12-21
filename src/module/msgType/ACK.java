@@ -136,7 +136,8 @@ public class ACK implements MSG_interface {
       throw new AckErrorException("Seq a confirmar não é o correspondido", packet.getData()[2]);
 
     port = dpac.getPort();
-    System.out.println("RECEBI: " + ACK.toString(dpac));
+    //System.out.println("RECEBI: " + ACK.toString(dpac));
+    log.addQueueReceived(MSG_interface.MSGToString(dpac));
   }
 
   public String toString() {

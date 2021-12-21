@@ -132,7 +132,8 @@ public class HI implements MSG_interface {
         //TODO chamar controlo de fluxo
         // mais q 3 vezes e ele manda um package error
       } else {
-        System.out.println("RECEBI: " + HI.toString(receivedPacket));
+        //System.out.println("RECEBI: " + HI.toString(receivedPacket));
+        log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
         ACK ack = new ACK(receivedPacket, port, socket, clientIP, seqPedido.getSeq(), log);
         ack.send();
         receveidPackage = true;
@@ -167,7 +168,8 @@ public class HI implements MSG_interface {
         //TODO chamar controlo de fluxo
         // mais q 3 vezes e ele manda um package error
       } else {
-        System.out.println("RECEBI: " + HI.toString(receivedPacket));
+        //System.out.println("RECEBI: " + HI.toString(receivedPacket));
+        log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
         ACK ack = new ACK(receivedPacket, port, socket, clientIP, seqPedido.getSeq(), log);
         ack.send();
         receveidPackage = true;
@@ -190,7 +192,8 @@ public class HI implements MSG_interface {
         hiReceved = validType(receivedPacket);
         //TODO se for falso varias vezes temos q fazer algo
         // FLUXO de congestao
-        if (hiReceved) System.out.println("RECEBI: " + HI.toString(receivedPacket));
+        if (hiReceved) //System.out.println("RECEBI: " + HI.toString(receivedPacket));
+          log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
 
       } catch (SocketTimeoutException e) {
         // TODO fluxo de congestao

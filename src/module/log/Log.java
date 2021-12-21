@@ -1,5 +1,6 @@
 package module.log;
 
+import module.Constantes;
 import module.commom.Pair;
 import module.status.Information;
 
@@ -13,11 +14,15 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Log implements Runnable, Closeable {
-  private final Queue<Pair<Boolean,String>> queue;
+  private final Queue<Pair<Integer,String>> queue;
   private final ReentrantLock l;
   private final Condition c;
   private final BufferedWriter fileLog;
   private final ReentrantLock lFileLog;
+  private final BufferedWriter fileLogTime;
+  private final ReentrantLock lFileLogTime;
+  private final BufferedWriter fileLogReceived;
+  private final ReentrantLock lFileLogReceived;
   private final Information status;
 
   public Log(String path, Information information) throws IOException {
@@ -25,20 +30,55 @@ public class Log implements Runnable, Closeable {
     l = new ReentrantLock();
     c = l.newCondition();
     lFileLog = new ReentrantLock();
-    fileLog = new BufferedWriter(new FileWriter(path));
+    fileLog = new BufferedWriter(new FileWriter(path + '/' + Constantes.CONFIG.LOG_NAME_FILE));
+    lFileLogTime = new ReentrantLock();
+    fileLogTime = new BufferedWriter(new FileWriter(path + '/' + Constantes.CONFIG.LOG_Time_NAME_FILE));
+    lFileLogReceived = new ReentrantLock();
+    fileLogReceived = new BufferedWriter(new FileWriter(path + '/' + Constantes.CONFIG.LOG_Received_NAME_FILE));
     status = information;
   }
 
-  private void writeLine(Pair<Boolean,String> pair) throws IOException {
-    if (pair.getFirst())
-      try {
-        lFileLog.lock();
-        fileLog.write(pair.getSecond());
-        fileLog.write("\n");
-        fileLog.flush();
-      } finally {
-        lFileLog.unlock();
-      }
+  private void writeLineSend(String s) throws IOException {
+    try {
+      lFileLog.lock();
+      fileLog.write(s);
+      fileLog.write("\n");
+      fileLog.flush();
+    } finally {
+      lFileLog.unlock();
+    }
+  }
+
+  private void writeLineTime(String s) throws IOException {
+    try {
+      lFileLogTime.lock();
+      fileLogTime.write(s);
+      fileLogTime.write("\n");
+      fileLogTime.flush();
+    } finally {
+      lFileLogTime.unlock();
+    }
+  }
+
+  private void writeLineReceived(String s) throws IOException {
+    try {
+      lFileLogReceived.lock();
+      fileLogReceived.write(s);
+      fileLogReceived.write("\n");
+      fileLogReceived.flush();
+    } finally {
+      lFileLogReceived.unlock();
+    }
+  }
+
+  private void writeLine(Pair<Integer,String> pair) throws IOException {
+    var s = pair.getSecond();
+    switch (pair.getFirst()) {
+      case 0 : writeLineSend(s); break;
+      case 1 : writeLineTime(s); break;
+      case 2 : writeLineReceived(s); break;
+      default: break;
+    }
   }
 
   private boolean isEmpty() {
@@ -50,7 +90,7 @@ public class Log implements Runnable, Closeable {
     }
   }
 
-  private Pair<Boolean,String> removeQueue() {
+  private Pair<Integer,String> removeQueue() {
     try {
       l.lock();
       return queue.remove();
@@ -82,7 +122,27 @@ public class Log implements Runnable, Closeable {
   public void addQueueSend(String string) {
     try {
       l.lock();
-      queue.add( new Pair<>(true,string));
+      queue.add( new Pair<>(0,string));
+      c.signalAll();
+    } finally {
+      l.unlock();
+    }
+  }
+
+  public void addQueueTime(String string) {
+    try {
+      l.lock();
+      queue.add( new Pair<>(1,string));
+      c.signalAll();
+    } finally {
+      l.unlock();
+    }
+  }
+
+  public void addQueueReceived(String string) {
+    try {
+      l.lock();
+      queue.add( new Pair<>(2,string));
       c.signalAll();
     } finally {
       l.unlock();
