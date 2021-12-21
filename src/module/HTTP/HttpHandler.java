@@ -4,21 +4,25 @@ import module.Constantes;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.StringTokenizer;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class HttpHandler implements AutoCloseable, Runnable {
+public class HttpHandler implements Runnable {
   private final String pathDir;
   private final PrintWriter out;
   private final BufferedReader in;
   private final Socket s;
+  private final ReentrantLock l;
 
-  public HttpHandler(Socket s, String dirName) throws IOException {
+  public HttpHandler(Socket s, String dirName, ReentrantLock l) throws IOException {
     this.pathDir = dirName;
     this.s = s;
     out = new PrintWriter(s.getOutputStream());
     in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+    this.l = l;
   }
 
   // passar para string um dado ficheiro
@@ -82,7 +86,6 @@ public class HttpHandler implements AutoCloseable, Runnable {
     switch (fileRequest) {
       case "/":
         handleStatus();
-        //case "/ola" : handleNotSupported();
       default:
         handlePageNotFound();
     }
@@ -92,9 +95,11 @@ public class HttpHandler implements AutoCloseable, Runnable {
   private void handleResponse(String method, String fileRequest) throws IOException {
     switch (method) {
       case "SEND":
-        handleGet(fileRequest);
+        //handleGet(fileRequest);
+        //break;
       case "GET":
         handleGet(fileRequest);
+        break;
       default:
         handleNotSupported();
     }
@@ -109,20 +114,24 @@ public class HttpHandler implements AutoCloseable, Runnable {
 
       handleResponse(method, fileRequested);
     } catch (IOException e) {
-      //TODO MUDar
       System.out.println("ERROR: " + e);
     }
   }
 
   @Override
   public void run() {
-    handle();
+    try {
+      l.lock();
+      handle();
+    } finally {
+      l.unlock();
+    }
   }
 
-  @Override
-  public void close() throws Exception {
-    out.close();
-    in.close();
-    s.close();
-  }
+  //@Override
+  //public void close() throws Exception {
+  //  out.close();
+  //  in.close();
+  //  s.close();
+  //}
 }

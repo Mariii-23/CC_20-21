@@ -3,9 +3,13 @@ package module.HTTP;
 import module.Constantes;
 import module.status.Information;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Listening implements Runnable {
 
@@ -23,30 +27,31 @@ public class Listening implements Runnable {
   public void run() {
     try {
       ServerSocket serverSocket = new ServerSocket(port);
+      ReentrantLock lock = new ReentrantLock();
       while (!status.isTerminated()) {
         // TODO maybe por tempo assim quando terminamos o programa ele
         // nao fica a espera de 1 ultima concecao
         Socket client = serverSocket.accept();
 
         try {
-          Thread t = new Thread(new HttpHandler(client, pathDir));
+          //PrintWriter out_ = new PrintWriter(client.getOutputStream());
+          //BufferedReader in_ = new BufferedReader(new InputStreamReader(client.getInputStream()));
+          ////InputStreamReader isr
+          ////    =  new InputStreamReader(client.getInputStream());
+          ////BufferedReader reader = new BufferedReader(isr);
+          ////String line = reader.readLine();
+          //String line = in_.readLine();
+          //while (!line.isEmpty()) {
+          //  System.out.println(line);
+          //  line = in_.readLine();
+          //}
+
+          Thread t = new Thread(new HttpHandler(client, pathDir, lock));
           t.run();
           t.join();
         } catch (InterruptedException e) {
           System.out.println(e.toString());
         }
-        //PrintWriter out_ = new PrintWriter(client.getOutputStream());
-        //BufferedReader in_ = new BufferedReader(new InputStreamReader(client.getInputStream()));
-
-        //InputStreamReader isr
-        //    =  new InputStreamReader(client.getInputStream());
-        //BufferedReader reader = new BufferedReader(isr);
-        //String line = reader.readLine();
-        //String line = in_.readLine();
-        //while (!line.isEmpty()) {
-        //  System.out.println(line);
-        //  line = in_.readLine();
-        //}
       }
       serverSocket.close();
     } catch (IOException ignored) {
