@@ -46,7 +46,7 @@ public class Menu<T> {
     int op;
     var is = new Scanner(System.in);
 
-    System.out.println(ANSI_BOLD + "Option: ");
+    System.out.println(ANSI_BOLD + "Option: " + ANSI_RESET);
     try {
       op = is.nextInt();
     } catch (InputMismatchException e) { // Não foi inscrito um int

@@ -5,7 +5,6 @@ import module.exceptions.AutenticationFailed;
 import module.exceptions.PackageErrorException;
 import module.log.Log;
 import module.msgType.HI;
-import module.sendAndReceivedMsg.ReceveidAndTreat;
 import module.status.Information;
 import module.status.SeqPedido;
 

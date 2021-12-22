@@ -1,11 +1,12 @@
-package module.sendAndReceivedMsg;
+package control;
 
-import control.SendMSWithChangePorts;
+import module.sendAndReceivedMsg.SendMSWithChangePorts;
 import module.Constantes;
 import module.exceptions.AckErrorException;
 import module.exceptions.PackageErrorException;
 import module.exceptions.TimeOutMsgException;
 import module.log.Log;
+import module.sendAndReceivedMsg.ControlMsgWithChangePorts;
 import module.status.Information;
 import module.status.SeqPedido;
 

@@ -1,4 +1,4 @@
-package control;
+package module.sendAndReceivedMsg;
 
 import module.sendAndReceivedMsg.ControlMsgWithChangePorts;
 

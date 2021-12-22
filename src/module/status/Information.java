@@ -14,6 +14,7 @@ public class Information {
 
   private final Login login;
   private final String pathDir;
+
   private final Set<String> filesToIgnored;
   private final ReentrantLock lFiles;
 

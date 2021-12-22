@@ -6,6 +6,7 @@ package module.HTTP;
 import module.Constantes;
 
 import java.io.*;
+import java.util.Date;
 
 public class Create_html_file {
   private final File dir;
@@ -29,9 +30,11 @@ public class Create_html_file {
   private /*@NotNull*/ String create_line_table(/*@NotNull*/ File file) {
     var is_file = file.isFile() ? "FILE" : "DIRECTORY";
     //var size = (double) file.length() / (1024 * 1024) ; //"mb"
-    var size = file.length();
+    var size = file.length() / 1024;
+    var date = new Date(file.lastModified());
     //var size = file.getTotalSpace(); // tem q se fazer a conversao i guess
-    return "<tr><td>" + create_link_file_or_dir(file) + "</td><td>" + is_file + "</td><td>" + size + "</td></tr>\n";
+    return "<tr><td>" + create_link_file_or_dir(file) + "</td><td>" + is_file + "</td><td>" + size +  "</td><td>" +
+        date + "</td></tr>\n";
   }
 
   private /*@NotNull*/ String create_table() {
@@ -39,7 +42,7 @@ public class Create_html_file {
     table.append("<table>\n");
     //table.append("   <caption>").append(create_link_file_or_dir(dir)).append("</caption>\n");
 
-    table.append("<tr><th>Path</th><th>What is?</th><th>Size</th></tr>\n");
+    table.append("<tr><th>Path</th><th>What it is?</th><th>Size (kb) </th><th>Last Modified</th></tr>\n");
     var listDir = dir.listFiles();
     for (File children : listDir) {
       table.append(create_line_table(children));

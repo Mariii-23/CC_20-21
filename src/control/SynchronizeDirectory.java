@@ -22,7 +22,7 @@ public class SynchronizeDirectory implements Runnable {
 
   private final SeqPedido seqPedido;
 
-  private final int time = 1000;
+  private final int time = 3000;
 
   public SynchronizeDirectory(Information status, DatagramSocket socket, String pathDir, InetAddress clientIP,
                               int port, SeqPedido seqPedido, Log log) {

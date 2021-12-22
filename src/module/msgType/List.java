@@ -1,7 +1,7 @@
 package module.msgType;
 
 
-import control.SendMSWithChangePorts;
+import module.sendAndReceivedMsg.SendMSWithChangePorts;
 import interfaces.MSG_interface;
 import module.Constantes;
 import module.directory.Directory;
@@ -118,12 +118,33 @@ public class List implements MSG_interface {
     return new DatagramPacket(msg, msg.length, clientIP, port);
   }
 
+  public void putDirectory(File f, StringBuilder sb, String path) {
+    if(f.isDirectory()) {
+      for(var elem : f.listFiles())
+        putDirectory(elem,sb,path + "/" + f.getName());
+    } else
+      sb.append(path + "/" + f.getName()).append(";;").append(f.lastModified()).append(";;");
+  }
+
+  public void putFile(File f, StringBuilder sb) {
+    if(f.isDirectory()) {
+      for(var elem : f.listFiles())
+        putDirectory(elem,sb, f.getName());
+    } else
+      sb.append(f.getName()).append(";;").append(f.lastModified()).append(";;");
+  }
+
   public void putData() {
     this.qb = new LinkedList<>();
     File dir = new File(path);
     StringBuilder sb = new StringBuilder();
     for (File f : dir.listFiles()) {
-      sb.append(f.getName()).append(";;").append(f.lastModified()).append(";;");
+      putFile(f,sb);
+      //if(f.isDirectory()) {
+      //  for(var elem : f.listFiles())
+      //    sb.append(elem.getName()).append(";;").append(elem.lastModified()).append(";;");
+      //} else
+      //sb.append(f.getName()).append(";;").append(f.lastModified()).append(";;");
     }
     String s = sb.toString();
     byte[] b = s.getBytes(StandardCharsets.UTF_8);
@@ -316,6 +337,8 @@ public class List implements MSG_interface {
     HashMap<String, FileStruct> hf = new HashMap<>();
     String[] meta = data.split(";;");
     for (int i = 0; i < meta.length; i = i + 2) {
+      if(meta[i] == null || meta[i].isEmpty() || (i+1) >= meta.length)
+        return hf;
       FileStruct fs = new FileStruct(meta[i], Long.valueOf(meta[i + 1]), false);
       hf.put(meta[i], fs);
     }
@@ -379,8 +402,14 @@ public class List implements MSG_interface {
         if (log.status.equalFileToIgnored(elem))
           continue;
         FileStruct file = new FileStruct(new File(elem));
-        GET getMsg = new GET(clientIP, portPrincipal, socket, controlSeqPedido, file, path, log);
-        ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(controlSeqPedido, getMsg, clientIP,
+        MSG_interface msgFile;
+        //if(file.isDirectory()) {
+        //  msgFile = new List(port, clientIP, socket, controlSeqPedido, file.getName(), log);
+        //} else {
+          msgFile = new GET(clientIP, portPrincipal, socket, controlSeqPedido, file, path, log);
+        //}
+        //GET getMsg = new GET(clientIP, portPrincipal, socket, controlSeqPedido, file, path, log);
+        ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(controlSeqPedido, msgFile, clientIP,
             portPrincipal, log);
         SendMSWithChangePorts t = new SendMSWithChangePorts(msg);
 

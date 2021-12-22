@@ -231,9 +231,36 @@ public class SEND implements MSG_interface {
     log.addQueueTime(s);
   }
 
+  private void createDirectorys(String dir, String fileName) throws IOException {
+    var strings = fileName.split("/");
+    if (strings.length == 1)
+      return;
+
+    String pasta = strings[0];
+    int i = 0;
+    for( ; i< strings.length -1 ; i++) {
+      if (i!= 0)
+        pasta = pasta + "/" + strings[i];
+      File file1 = new File( dir + "/" + pasta);
+      if (file1.exists())
+        continue;
+      //file1.createNewFile();
+      file1.mkdirs();
+    }
+  }
+
   public void writeFile(Queue<byte[]> array, long lastModification) throws IOException {
     //FileWriter myWriter = new FileWriter(dir + '/' + fileName);
-    FileOutputStream out = new FileOutputStream(dir + '/' + fileName);
+
+    FileOutputStream out;
+    createDirectorys(dir, fileName);
+    try {
+      out = new FileOutputStream(dir + '/' + fileName);
+    } catch (FileNotFoundException e){
+      e.printStackTrace();
+      return;
+    }
+
     int size = array.size();
     int i = 1;
     for (var data : array) {
@@ -406,7 +433,7 @@ public class SEND implements MSG_interface {
       in = new FileInputStream(dir + '/' + fileName);
       file = new File(dir + '/' + fileName);
     } catch (FileNotFoundException e) {
-      System.out.println("File not found Exception->  " + dir + '/' + fileName + "|");
+      System.out.println("File not found Exception->  " + dir + '/' + fileName );
       System.out.println(e.getMessage());
       return -1;
     }
