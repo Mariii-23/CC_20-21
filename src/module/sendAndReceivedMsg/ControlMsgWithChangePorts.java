@@ -33,6 +33,7 @@ public class ControlMsgWithChangePorts implements Runnable {
     this.is_send = false;
     this.clientIP = clientIP;
     this.socket = new DatagramSocket(0);
+    this.socket.setSoTimeout(200);
     this.clientPort = packet.getPort();
     this.msg_interface = MSG_interface.createMsg(packet, socket, seqPedido, dir, information, log);
     //System.out.println("Tou na porta " + socket.getLocalPort());
@@ -46,6 +47,7 @@ public class ControlMsgWithChangePorts implements Runnable {
     this.is_send = true;
     this.clientIP = clientIP;
     this.socket = new DatagramSocket(0);
+    this.socket.setSoTimeout(200);
     this.clientPort = clientPort;
     //System.out.println("Tou na porta " + socket.getLocalPort());
   }

@@ -77,7 +77,7 @@ public class BYE implements MSG_interface {
   @Override
   public boolean validType(DatagramPacket packet) {
     var msg = packet.getData();
-    return msg[0] == Type.ACK.getNum();
+    return msg[0] == Type.Bye.getNum();
   }
 
   @Override
@@ -102,10 +102,9 @@ public class BYE implements MSG_interface {
 
   @Override
   public void sendFirst(DatagramSocket socket) throws IOException {
-    DatagramPacket packet = createPacket();
+    packet = createPacket();
     socket.send(packet);
     log.addQueueSend(MSG_interface.MSGToString(packet));
-    this.packet = packet;
   }
 
   @Override

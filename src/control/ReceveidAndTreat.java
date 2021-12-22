@@ -59,15 +59,16 @@ public class ReceveidAndTreat implements Runnable {
         DatagramPacket p = new DatagramPacket(dados, dados.length, receivedPacket.getAddress(), receivedPacket.getPort());
         var msg = new ControlMsgWithChangePorts(seqPedido, clientIP, pathDir, p, status, log);
         //System.out.println("EU sei q recebi isto algo no principal");
-        SendMSWithChangePorts t = new SendMSWithChangePorts(msg);
+        SendMSWithChangePorts t = new SendMSWithChangePorts(msg,status);
 
         var n = new Thread(t);
         threads.add(n);
         n.start();
       }
 
-      for (var t : threads)
+      for (var t : threads) {
         t.join();
+      }
 
     } catch (TimeOutMsgException | AckErrorException | PackageErrorException | IOException | InterruptedException e) {
       e.printStackTrace();

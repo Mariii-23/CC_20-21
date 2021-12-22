@@ -1,5 +1,10 @@
 package module;
 
+import module.log.Log;
+
+import java.util.Arrays;
+import java.util.HashSet;
+
 /**
  * Aqui serão guardadas todas as constantes por Módulos.
  */
@@ -27,6 +32,7 @@ public class Constantes {
     public static String LOG_NAME_FILE = ".log";
     public static String LOG_Time_NAME_FILE = ".logTime";
     public static String LOG_Received_NAME_FILE = ".logReceived";
+
   }
 
   /**

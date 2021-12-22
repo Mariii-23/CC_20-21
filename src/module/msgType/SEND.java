@@ -229,9 +229,10 @@ public class SEND implements MSG_interface {
     var s = "[SEND] Name: " + fileName + " || Size: " + sizeFile + " || Time (sec): " + time +
         " || Bits/sec: " + bitsSec;
     log.addQueueTime(s);
+    log.status.increaseSendFiles();
   }
 
-  private void createDirectorys(String dir, String fileName) throws IOException {
+  private void createDirectorys(String dir, String fileName) {
     var strings = fileName.split("/");
     if (strings.length == 1)
       return;
@@ -244,7 +245,6 @@ public class SEND implements MSG_interface {
       File file1 = new File( dir + "/" + pasta);
       if (file1.exists())
         continue;
-      //file1.createNewFile();
       file1.mkdirs();
     }
   }
@@ -356,6 +356,7 @@ public class SEND implements MSG_interface {
     } catch (SocketTimeoutException ignored) {
     }
     ;
+    log.status.increaseSendFiles();
   }
 
   @Override
@@ -421,6 +422,7 @@ public class SEND implements MSG_interface {
     }
     if (!file.isEmpty()) {
       writeFile(file, lastModification);
+      log.status.increaseGetFiles();
     }
   }
 

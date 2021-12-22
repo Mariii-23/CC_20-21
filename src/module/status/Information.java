@@ -3,10 +3,14 @@ package module.status;
 import module.Constantes;
 import module.logins.Login;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static module.Constantes.PATHS.*;
+import static module.commom.Colors.*;
 
 public class Information {
   private final ReentrantLock l;
@@ -15,6 +19,8 @@ public class Information {
   private final Login login;
   private final String pathDir;
 
+  public final HashSet<String> logFiles = new HashSet<>(Arrays.asList(
+      LOGINS,LOG_NAME_FILE, LOG_Received_NAME_FILE, LOG_Time_NAME_FILE));
   private final Set<String> filesToIgnored;
   private final ReentrantLock lFiles;
 
@@ -22,11 +28,20 @@ public class Information {
   private final ReentrantLock lStartMenu;
   private final Condition conditionStartMenu;
 
+  private int numberThreads;
+  private int numberTotalThreads;
+  private final ReentrantLock lNumberThreads;
+
+  private int numberSendFiles;
+  private final ReentrantLock lNumberSendFiles;
+  private int numberGetFiles;
+  private final ReentrantLock lNumberGetFiles;
+
   public Information(String pathDir) {
     this.pathDir = pathDir;
     this.l = new ReentrantLock();
     this.terminated = false;
-    this.login = new Login(pathDir + '/' + Constantes.PATHS.LOGINS);
+    this.login = new Login(pathDir + '/' + LOGINS);
     login.readAutenticationFile();
     this.filesToIgnored = new HashSet<>();
     this.lFiles = new ReentrantLock();
@@ -35,13 +50,96 @@ public class Information {
     this.startMenu = false;
     this.lStartMenu = new ReentrantLock();
     this.conditionStartMenu = lStartMenu.newCondition();
+
+    this.numberThreads = 0;
+    this.numberTotalThreads = 0;
+    this.lNumberThreads = new ReentrantLock();
+
+    this.numberSendFiles = 0;
+    this.lNumberSendFiles = new ReentrantLock();
+    this.numberGetFiles = 0;
+    this.lNumberGetFiles = new ReentrantLock();
+  }
+
+  public int numberTotalThreads() {
+    try {
+      this.lNumberThreads.lock();
+      return this.numberTotalThreads;
+    } finally {
+      this.lNumberThreads.unlock();
+    }
+  }
+
+  public int numberThreads() {
+    try {
+      this.lNumberThreads.lock();
+      return this.numberThreads;
+    } finally {
+      this.lNumberThreads.unlock();
+    }
+  }
+
+  public void increaseThread() {
+    try {
+      this.lNumberThreads.lock();
+      this.numberThreads++;
+      this.numberTotalThreads++;
+    } finally {
+      this.lNumberThreads.unlock();
+    }
+  }
+
+  public void decreaseThread() {
+    try {
+      this.lNumberThreads.lock();
+      this.numberThreads++;
+    } finally {
+      this.lNumberThreads.unlock();
+    }
+  }
+
+
+  public void increaseSendFiles() {
+    try {
+      this.lNumberSendFiles.lock();
+      this.numberSendFiles++;
+    } finally {
+      this.lNumberSendFiles.unlock();
+    }
+  }
+
+  public int numberSendFiles() {
+    try {
+      this.lNumberSendFiles.lock();
+      return this.numberSendFiles;
+    } finally {
+      this.lNumberSendFiles.unlock();
+    }
+  }
+
+  public void increaseGetFiles() {
+    try {
+      this.lNumberGetFiles.lock();
+      this.numberGetFiles++;
+    } finally {
+      this.lNumberGetFiles.unlock();
+    }
+  }
+
+  public int numberGetFiles() {
+    try {
+      this.lNumberGetFiles.lock();
+      return this.numberGetFiles;
+    } finally {
+      this.lNumberGetFiles.unlock();
+    }
   }
 
   private void initFilesToIgnored() {
     try {
       lFiles.lock();
       this.filesToIgnored.add(Constantes.PATHS.LOG_NAME_FILE);
-      this.filesToIgnored.add(Constantes.PATHS.LOGINS);
+      this.filesToIgnored.add(LOGINS);
       this.filesToIgnored.add(Constantes.PATHS.LOG_Received_NAME_FILE);
       this.filesToIgnored.add(Constantes.PATHS.LOG_Time_NAME_FILE);
     } finally {
@@ -67,11 +165,35 @@ public class Information {
     }
   }
 
+  public void addFileToSynchronize(String filename) {
+    try {
+      lFiles.lock();
+      this.filesToIgnored.remove(filename);
+    } finally {
+      lFiles.unlock();
+    }
+  }
+
+  public String filesToIgnoredToString() {
+    var s = new StringBuilder(ANSI_BG_BLUE + "Files to ignored\n" + ANSI_RESET);
+    try {
+      int i = 1;
+      lFiles.lock();
+      for(var elem : filesToIgnored){
+        s.append( ANSI_BG_BLUE + i + " -> " + ANSI_RESET ); i++;
+        s.append(elem).append("\n");
+      }
+    } finally {
+      lFiles.unlock();
+    }
+    return s.toString();
+  }
 
   public void endProgram() {
     try {
       l.lock();
       this.terminated = true;
+      System.out.println("Finishing the program...");
     } finally {
       l.unlock();
     }

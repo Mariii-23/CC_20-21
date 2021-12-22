@@ -1,9 +1,11 @@
 package module.HTTP;
 
 import module.Constantes;
+import module.exceptions.TimeOutMsgException;
 import module.status.Information;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.locks.ReentrantLock;
@@ -25,10 +27,16 @@ public class Listening implements Runnable {
     try {
       ServerSocket serverSocket = new ServerSocket(port);
       ReentrantLock lock = new ReentrantLock();
+      serverSocket.setSoTimeout(1000);
       while (!status.isTerminated()) {
         // TODO maybe por tempo assim quando terminamos o programa ele
         // nao fica a espera de 1 ultima concecao
-        Socket client = serverSocket.accept();
+        Socket client;
+        try {
+          client = serverSocket.accept();
+        } catch (InterruptedIOException ignored) {
+          continue;
+        }
 
         try {
           //PrintWriter out_ = new PrintWriter(client.getOutputStream());
@@ -42,8 +50,7 @@ public class Listening implements Runnable {
           //  System.out.println(line);
           //  line = in_.readLine();
           //}
-
-          Thread t = new Thread(new HttpHandler(client, pathDir, lock));
+          Thread t = new Thread(new HttpHandler(client, pathDir, lock, status));
           t.run();
           t.join();
         } catch (InterruptedException e) {

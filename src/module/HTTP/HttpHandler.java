@@ -1,6 +1,7 @@
 package module.HTTP;
 
 import module.Constantes;
+import module.status.Information;
 
 import java.io.*;
 import java.net.Socket;
@@ -15,13 +16,15 @@ public class HttpHandler implements Runnable {
   private final BufferedReader in;
   private final Socket s;
   private final ReentrantLock l;
+  private final Information information;
 
-  public HttpHandler(Socket s, String dirName, ReentrantLock l) throws IOException {
+  public HttpHandler(Socket s, String dirName, ReentrantLock l, Information information) throws IOException {
     this.pathDir = dirName;
     this.s = s;
     out = new PrintWriter(s.getOutputStream());
     in = new BufferedReader(new InputStreamReader(s.getInputStream()));
     this.l = l;
+    this.information = information;
   }
 
   // passar para string um dado ficheiro
@@ -37,8 +40,8 @@ public class HttpHandler implements Runnable {
   /// Pedidos SEND
 
   // Responder ao pedido do status SEND /
-  private void handleStatus() throws IOException {
-    String string = new Create_html_file(pathDir).createHtml();
+  private void handleStatus(Boolean isLog) throws IOException {
+    String string = new Create_html_file(pathDir, information).createHtml(isLog);
     out.println("HTTP/1.1 200 OK");
     out.println("Server: " + Constantes.CONFIG.SERVER_NAME);
     out.println("Date: " + new Date());
@@ -84,7 +87,11 @@ public class HttpHandler implements Runnable {
   private void handleGet(String fileRequest) throws IOException {
     switch (fileRequest) {
       case "/":
-        handleStatus();
+        handleStatus(false);
+        break;
+      case "/log":
+        handleStatus(true);
+        break;
       default:
         handlePageNotFound();
     }

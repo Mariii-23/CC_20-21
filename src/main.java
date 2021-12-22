@@ -57,12 +57,16 @@ public class main {
     t[0] = new Thread(c);
     t[1] = new Thread(l);
 
+    status.increaseThread();
+    status.increaseThread();
     t[0].start();
     t[1].start();
 
     try {
-      t[0].join();
       t[1].join();
+      status.decreaseThread();
+      t[0].join();
+      status.decreaseThread();
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

@@ -8,11 +8,36 @@ import java.util.Objects;
 public class Directory {
   private final HashMap<String, FileStruct> files;
 
+  //public Directory(File dir) {
+  //  files = new HashMap<>();
+
+  //  for (File file : Objects.requireNonNull(dir.listFiles()))
+  //    files.put(file.getName(), new FileStruct(file));
+  //}
+
+  private void addDirectory(File file , String path) {
+    String actualPath;
+    if (path == null || path.isEmpty())
+      actualPath = file.getName();
+    else actualPath = path + "/" + file.getName();
+    for (var elem: Objects.requireNonNull(file.listFiles())) {
+      var name =actualPath + "/" + elem.getName();
+      if (elem.isDirectory()) {
+        addDirectory(elem, name);
+      } else {
+        files.put( name, new FileStruct(name, elem.lastModified(),false));
+      }
+    }
+  }
+
   public Directory(File dir) {
     files = new HashMap<>();
-
-    for (File file : Objects.requireNonNull(dir.listFiles()))
-      files.put(file.getName(), new FileStruct(file));
+    for (var elem : Objects.requireNonNull(dir.listFiles())){
+      if (elem.isDirectory()){
+        addDirectory(elem,"");
+      } else
+        files.put(elem.getName(), new FileStruct(elem));
+    }
   }
 
   public boolean addFile(FileStruct file) {

@@ -91,19 +91,25 @@ public class Communication implements Runnable {
     ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status, socket, pathDir, clientIP, seqPedido, log);
     SynchronizeDirectory synchronizeDirectory =
         new SynchronizeDirectory(status, socket, pathDir, clientIP, port, seqPedido, log);
-    RunMenu menu = new RunMenu(status);
+    RunMenu menu = new RunMenu(status, port, clientIP, log, seqPedido);
     Thread[] threads = new Thread[4];
     threads[0] = new Thread(receveidAndTreat);
     threads[1] = new Thread(synchronizeDirectory);
     threads[2] = new Thread(log);
     threads[3] = new Thread(menu);
     threads[3].start();
+    status.increaseThread();
     threads[2].start();
+    status.increaseThread();
     threads[0].start();
+    status.increaseThread();
     threads[1].start();
+    status.increaseThread();
     try {
-      for (var thread : threads)
+      for (var thread : threads) {
         thread.join();
+        status.decreaseThread();
+      }
       //threads[0].join();
       //threads[1].join();
       //threads[2].join();

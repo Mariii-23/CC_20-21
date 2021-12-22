@@ -359,6 +359,7 @@ public class List implements MSG_interface {
     int i = 0;
     while (!fileReceved) {
       segFileReceved = false;
+      int erros = 0;
       while (!segFileReceved) {
         try {
           socket.receive(receivedPacket);
@@ -377,6 +378,9 @@ public class List implements MSG_interface {
             break;
           }
         } catch (SocketTimeoutException e) {
+          erros++;
+          if (erros > 3)
+            throw new TimeOutMsgException();
         }
       }
     }
@@ -411,7 +415,7 @@ public class List implements MSG_interface {
         //GET getMsg = new GET(clientIP, portPrincipal, socket, controlSeqPedido, file, path, log);
         ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(controlSeqPedido, msgFile, clientIP,
             portPrincipal, log);
-        SendMSWithChangePorts t = new SendMSWithChangePorts(msg);
+        SendMSWithChangePorts t = new SendMSWithChangePorts(msg, log.status);
 
         threads.add(new Thread(t));
         t.sendFirst();
