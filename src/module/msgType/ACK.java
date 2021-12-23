@@ -21,13 +21,13 @@ public class ACK implements MSG_interface {
   private final InetAddress clientIP;
 
   private final Type type = Type.ACK;
-  private DatagramPacket packet; //
+  private DatagramPacket packet;
   private DatagramSocket socket;
 
   private final Byte seqPedido;
   private final Byte seq = (byte) 0;
-  private final Byte seqConfirmed; // seq a confirmar
-  private final Byte seqSegConfirmed; // seq a confirmar
+  private final Byte seqConfirmed;
+  private final Byte seqSegConfirmed;
   private final Boolean isEmpty;
 
   public ACK(DatagramPacket packet, int port, DatagramSocket socket, InetAddress clientIP, byte seq, Log log) {
@@ -73,7 +73,6 @@ public class ACK implements MSG_interface {
     buff[4] = seqSegConfirmed;
   }
 
-  //@Override
   public DatagramPacket createPacket(byte sed, byte seqSeg) {
     byte[] msg = createMsg(seqPedido, seq);
     return this.packet = new DatagramPacket(msg, msg.length, clientIP, port);
@@ -140,7 +139,6 @@ public class ACK implements MSG_interface {
       throw new AckErrorException("Seq a confirmar não é o correspondido", packet.getData()[2]);
 
     port = dpac.getPort();
-    //System.out.println("RECEBI: " + ACK.toString(dpac));
     log.addQueueReceived(MSG_interface.MSGToString(dpac));
   }
 
@@ -148,7 +146,7 @@ public class ACK implements MSG_interface {
     if (packet != null) {
       return ACK.toString(packet);
     } else {
-      return "Packet Invalid";
+      return "Invalid packet";
     }
   }
 

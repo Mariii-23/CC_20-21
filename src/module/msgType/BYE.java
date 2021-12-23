@@ -28,17 +28,6 @@ public class BYE implements MSG_interface {
   private final Information information;
   private DatagramPacket packet;
 
-  public BYE(int port, InetAddress clientIP, DatagramSocket socket,
-             SeqPedido seqPedido, DatagramPacket packet, Information information, Log log) {
-    this.log = log;
-    this.port = port;
-    this.clientIP = clientIP;
-    this.socket = socket;
-    this.seqPedido = seqPedido;
-    this.packet = packet;
-    this.information = information;
-  }
-
   public BYE(DatagramPacket packet, InetAddress clientIP, int port, DatagramSocket socket, SeqPedido seqPedido,
              Information information, Log log) {
     this.log = log;
@@ -122,9 +111,7 @@ public class BYE implements MSG_interface {
         packet.setPort(port);
         socket.send(packet);
         log.addQueueSend(MSG_interface.MSGToString(packet));
-        //i++;
-      } catch (PackageErrorException e1) {
-        throw e1;
+        i++;
       }
     }
   }

@@ -140,11 +140,8 @@ public class GET implements MSG_interface {
       } catch (TimeOutMsgException | AckErrorException e) {
         socket.send(packet);
         log.addQueueSend(MSG_interface.MSGToString(packet));
-        //continue;
       } catch (PackageErrorException e1) {
         break;
-        //socket.send(packet);
-        //continue;
       }
     }
 
@@ -171,9 +168,6 @@ public class GET implements MSG_interface {
 
   @Override
   public void send(DatagramSocket socket) throws IOException, PackageErrorException {
-    //DatagramPacket packet = createPacket();
-    //socket.send(packet);
-    // TODO o packet é nulo porque tenho q lho dar
     ACK ack = new ACK(this.packet, port, socket, clientIP, seq, log);
     boolean ackFail = false;
     while (!ackFail) {
@@ -184,18 +178,15 @@ public class GET implements MSG_interface {
         packet.setPort(port);
         socket.send(packet);
         log.addQueueSend(MSG_interface.MSGToString(packet));
-        //continue;
       } catch (PackageErrorException e1) {
         break;
-        //socket.send(packet);
-        //continue;
       }
     }
 
     port = ack.getPort();
 
     if (file == null)
-      return; // TODO lancar erro ou mandar o bye
+      return;
 
     SEND SENDMsg = new SEND(clientIP, port, socket, seqPedido, file.getName(), dir, log);
     try {

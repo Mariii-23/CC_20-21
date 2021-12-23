@@ -45,7 +45,6 @@ public class SEND implements MSG_interface {
     this.port = port;
     this.clientIP = clientIp;
     this.socket = socket;
-    //this.seqPedido = seqPedido.getSeq();
     this.controlSeqPedido = seqPedido;
     this.dir = dir;
     this.fileName = fileName;
@@ -58,7 +57,6 @@ public class SEND implements MSG_interface {
     this.port = port;
     this.clientIP = clientIP;
     this.socket = socket;
-    //this.seqPedido = seq.getSeq();
     this.controlSeqPedido = seq;
     this.packet = packet;
   }
@@ -97,9 +95,6 @@ public class SEND implements MSG_interface {
     if (fileInBytes.isEmpty()) return;
 
     byte[] info = fileInBytes.remove();
-
-    //int counter = 0;
-    //System.out.println("counter: " + counter + "; info size: " + info.length + "; info: " + Arrays.toString(info));
 
     int i2 = 0;
     int i = Constantes.CONFIG.HEAD_SIZE;
@@ -140,13 +135,11 @@ public class SEND implements MSG_interface {
   }
 
   public Queue<DatagramPacket> createPackets() {
-    // isto nao devia acontecer
     if (readFile() != 0) return new LinkedList<>();
 
     Queue<DatagramPacket> list = new LinkedList<>();
     list.add(firstPacket());
 
-    //list.add(file)
     int len = fileInBytes.size();
     for (var i = 0; i < len; i++)
       list.add(createPacket());
@@ -163,11 +156,8 @@ public class SEND implements MSG_interface {
     Queue<DatagramPacket> packets = createPackets();
     if (packets.isEmpty()) {
       System.out.println("Nao mandei nenhum ficheiro");
-      //TODO Acrescentar cenas ou mudar
-      // mandar um bye
       return;
     }
-    //TODO comecar a ler o tempo
     var startTime = System.currentTimeMillis();
     for (var elem = packets.remove(); elem != null; ) {
       socket.send(elem);
@@ -185,19 +175,13 @@ public class SEND implements MSG_interface {
           timeOutError++;
           if (timeOutError > 5)
             break;
-          // TODO controlo de fluxo
-          // vamos diminuindo o tempo de receber cenas
           socket.send(elem);
           log.addQueueSend(MSG_interface.MSGToString(elem));
-          //continue;
         } catch (PackageErrorException e1) {
-          // TODO controlo de fluxo
-          // a partir de x pacotes errados, fechamos a conecao
           if (packageError > 3) break;
           packageError++;
           socket.send(elem);
           log.addQueueSend(MSG_interface.MSGToString(elem));
-          //continue;
         } catch (AckErrorException e2) {
           if (ackError > 3) break;
           ackError++;
@@ -213,7 +197,6 @@ public class SEND implements MSG_interface {
         elem = null;
     }
 
-    //TODO MUDAR
     ACK ack = new ACK(null, port, socket, clientIP, seqPedido, log);
     seqPedido++;
     try {
@@ -221,18 +204,18 @@ public class SEND implements MSG_interface {
     } catch (Exception e) {
     }
 
-    //TODO acabar o tempo
     var endTime = System.currentTimeMillis();
-    var time = (endTime - startTime) / 1000;
-    var bitsSec = sizeFile * 8L;
+    var time = (endTime - startTime) ;
+    // var time = (endTime - startTime) / 1000;
+    var bitsSec = sizeFile * 8L / 1000;
     if (time > 0) bitsSec = bitsSec / time;
-    var s = "[SEND] Name: " + fileName + " || Size: " + sizeFile + " || Time (sec): " + time +
+    var s = "[SEND] Name: " + fileName + " || Size: " + sizeFile + " || Time (ms): " + time +
         " || Bits/sec: " + bitsSec;
     log.addQueueTime(s);
     log.status.increaseSendFiles();
   }
 
-  private void createDirectorys(String dir, String fileName) {
+  private void createDirectors(String dir, String fileName) {
     var strings = fileName.split("/");
     if (strings.length == 1)
       return;
@@ -250,10 +233,9 @@ public class SEND implements MSG_interface {
   }
 
   public void writeFile(Queue<byte[]> array, long lastModification) throws IOException {
-    //FileWriter myWriter = new FileWriter(dir + '/' + fileName);
 
     FileOutputStream out;
-    createDirectorys(dir, fileName);
+    createDirectors(dir, fileName);
     try {
       out = new FileOutputStream(dir + '/' + fileName);
     } catch (FileNotFoundException e){
@@ -264,28 +246,15 @@ public class SEND implements MSG_interface {
     int size = array.size();
     int i = 1;
     for (var data : array) {
-      //int i =0;
-      //for( ; i < data.length && data[i] != (byte) 0 ; i++);
-      //byte[] copy = Arrays.copyOfRange(data,0,i);
-
-      //String s = new String(copy, StandardCharsets.UTF_8);
-      //String s = new String(data,StandardCharsets.UTF_8);
       if (i == size) {
-        //  //ultimo pacote
-        //int p = data.length -1;
-        //for( ; p > 0 && data[p] == (byte) 0 ; p--);
         out.write(Arrays.copyOfRange(data, 0, lastSizeRead));
       } else
         out.write(Arrays.copyOfRange(data, 0, data.length - 3));
 
       i++;
-      //String s = new String(data);
-      //myWriter.write(s);
     }
     out.flush();
     out.close();
-    //myWriter.flush();
-    //myWriter.close();
     File file = new File(dir + '/' + fileName);
     file.setLastModified(lastModification);
   }
@@ -294,8 +263,6 @@ public class SEND implements MSG_interface {
     Queue<DatagramPacket> packets = createPackets();
     if (packets.isEmpty()) {
       System.out.println("Nao mandei nenhum ficheiro");
-      //TODO Acrescentar cenas ou mudar
-      // mandar um bye
       return;
     }
 
@@ -315,19 +282,13 @@ public class SEND implements MSG_interface {
           if (timeOutError > 5)
             break;
           timeOutError++;
-          // TODO controlo de fluxo
-          // vamos diminuindo o tempo de receber cenas
           socket.send(elem);
           log.addQueueSend(MSG_interface.MSGToString(elem));
-          //continue;
         } catch (PackageErrorException e1) {
-          // TODO controlo de fluxo
-          // a partir de x pacotes errados, fechamos a conecao
           if (packageError > 3) break;
           packageError++;
           socket.send(elem);
           log.addQueueSend(MSG_interface.MSGToString(elem));
-          //continue;
         } catch (AckErrorException e2) {
           if (ackError > 3) break;
           ackError++;
@@ -343,7 +304,6 @@ public class SEND implements MSG_interface {
         elem = null;
     }
 
-    //TODO MUDAR
     ACK ack = new ACK(null, port, socket, clientIP, seqPedido, log);
     seqPedido++;
     try {
@@ -361,7 +321,6 @@ public class SEND implements MSG_interface {
 
   @Override
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
-    // recebe o pedido
     boolean fileReceved = false; // so passa a true no ultimo caso
     boolean segFileReceved = false; // so passa a true no ultimo caso
 
@@ -380,30 +339,23 @@ public class SEND implements MSG_interface {
 
           segFileReceved = validType(receivedPacket);
           if (segFileReceved) {
-            //System.out.print("RECEBI: ");
-            //MSG_interface.printMSG(receivedPacket);
             log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
             ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq(), log);
             ack.send();
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
             if (first) {
-              // TODO recebe o lastModification;size_do_ultimo_pacote
               int i;
               for (i = 0; i < data.length && data[i] != (byte) 0; i++) ;
 
               String msg = new String(Arrays.copyOfRange(data, 0, i));
               var aux = msg.split(";;", 2);
-              ;
               lastModification = Long.parseLong(aux[0]);
               this.lastSizeRead = Integer.parseInt(aux[1]);
 
               first = false;
               continue;
             }
-            int i;
-            //for (i = 0; i < data.length && data[i] != (byte) 0; i++) ;
             if (last == null || !Arrays.equals(last, data)) {
-              //file.add(Arrays.copyOfRange(data, 0, i));
               file.add(data.clone());
               last = data.clone();
             }
@@ -413,8 +365,6 @@ public class SEND implements MSG_interface {
             break;
           }
         } catch (SocketTimeoutException e) {
-          //System.out.println("acabei");
-          //return;
           ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq(), log);
           ack.send();
         }
@@ -426,7 +376,7 @@ public class SEND implements MSG_interface {
     }
   }
 
-  //return 0 se sucesso
+  // return 0 se sucesso
   public int readFile() {
     this.fileInBytes = new LinkedList<>();
     FileInputStream in;
@@ -440,40 +390,11 @@ public class SEND implements MSG_interface {
       return -1;
     }
 
-    //try {
-    //  fileInBytes.add(Long.toString(file.lastModified()).getBytes());
-    //  byte[] data = Files.readAllBytes(Path.of(dir+'/'+fileName));
-    //  int number = data.length / Constantes.CONFIG.TAIL_SIZE;
-    //  int resto = data.length - number * Constantes.CONFIG.TAIL_SIZE;
-
-    //  int i;
-    //  boolean first = true;
-    //  for ( i =0; i < number; i++) {
-    //    int comeco = i*Constantes.CONFIG.TAIL_SIZE;
-    //    if (first){
-    //      first = false;
-    //    } else
-    //      comeco++;
-    //    int fim = comeco + Constantes.CONFIG.TAIL_SIZE;
-    //    fileInBytes.add(Arrays.copyOfRange(data,comeco,fim));
-    //  }
-
-    //  if (resto > 0 ) {
-    //    int comeco = i*Constantes.CONFIG.TAIL_SIZE;
-    //    int fim = comeco + resto;
-    //    fileInBytes.add(Arrays.copyOfRange(data,comeco,comeco + Constantes.CONFIG.TAIL_SIZE));
-    //  }
-
-    //} catch (IOException e) {
-    //  e.printStackTrace();
-    //}
-
     int size = Constantes.CONFIG.TAIL_SIZE;
     byte[] buff = new byte[size];
-    //fileInBytes.add(Long.toString(file.lastModified()).getBytes());
     this.lastModification = file.lastModified();
 
-    int sizeRead = 0;
+    int sizeRead;
     int lastSize = 0;
     try {
       while (-1 != (sizeRead = in.read(buff))) {
@@ -495,7 +416,5 @@ public class SEND implements MSG_interface {
   public static String toString(DatagramPacket packet) {
     byte[] msg = packet.getData();
     return "[SEND] -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG (dados do ficheiro)";
-    //return "[SEND] -> SEQ: " + msg[1] + "; SEG: " + msg[2] + "; MSG: "
-    // + new String(MSG_interface.getDataMsg(packet),StandardCharsets.UTF_8);
   }
 }

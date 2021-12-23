@@ -1,6 +1,5 @@
 package module.msgType;
 
-
 import module.sendAndReceivedMsg.SendMSWithChangePorts;
 import interfaces.MSG_interface;
 import module.Constantes;
@@ -28,7 +27,7 @@ public class List implements MSG_interface {
   private final String path;
 
   private final Type type = Type.List;
-  private final DatagramPacket packet; //
+  private final DatagramPacket packet;
   private DatagramSocket socket;
   private final Directory dir;
 
@@ -90,7 +89,6 @@ public class List implements MSG_interface {
   public boolean validType(DatagramPacket packet) {
     var msg = packet.getData();
     return msg[0] == Type.List.getNum();
-    // return true;
   }
 
   @Override
@@ -105,13 +103,11 @@ public class List implements MSG_interface {
 
   public void createPackets() {
     this.seqPedido = controlSeqPedido.getSeq();
-    //TODO depois verificar o que acontece quando a pasta nao tem ficheiros
     this.packets = new LinkedList<>();
     for (var i = 0; i < qb.size(); i++)
       packets.add(createPacket());
   }
 
-  //@Override
   public DatagramPacket createPacket() {
     byte[] msg = createMsg(seqPedido, seq);
     seq++;
@@ -120,17 +116,21 @@ public class List implements MSG_interface {
 
   public void putDirectory(File f, StringBuilder sb, String path) {
     if(f.isDirectory()) {
-      for(var elem : f.listFiles())
-        putDirectory(elem,sb,path + "/" + f.getName());
+      if(!log.status.equalFileToIgnore(path + "/" + f.getName()))
+        for(var elem : Objects.requireNonNull(f.listFiles()))
+          putDirectory(elem,sb,path + "/" + f.getName());
     } else
-      sb.append(path + "/" + f.getName()).append(";;").append(f.lastModified()).append(";;");
+    if (!log.status.equalFileToIgnore( path + "/" + f.getName()))
+      sb.append(path).append("/").append(f.getName()).append(";;").append(f.lastModified()).append(";;");
   }
 
   public void putFile(File f, StringBuilder sb) {
     if(f.isDirectory()) {
-      for(var elem : f.listFiles())
-        putDirectory(elem,sb, f.getName());
+      if(!log.status.equalFileToIgnore(f.getName()))
+        for(var elem : Objects.requireNonNull(f.listFiles()))
+          putDirectory(elem,sb, f.getName());
     } else
+      if (!log.status.equalFileToIgnore(f.getName()))
       sb.append(f.getName()).append(";;").append(f.lastModified()).append(";;");
   }
 
@@ -138,13 +138,8 @@ public class List implements MSG_interface {
     this.qb = new LinkedList<>();
     File dir = new File(path);
     StringBuilder sb = new StringBuilder();
-    for (File f : dir.listFiles()) {
+    for (File f : Objects.requireNonNull(dir.listFiles())) {
       putFile(f,sb);
-      //if(f.isDirectory()) {
-      //  for(var elem : f.listFiles())
-      //    sb.append(elem.getName()).append(";;").append(elem.lastModified()).append(";;");
-      //} else
-      //sb.append(f.getName()).append(";;").append(f.lastModified()).append(";;");
     }
     String s = sb.toString();
     byte[] b = s.getBytes(StandardCharsets.UTF_8);
@@ -156,7 +151,6 @@ public class List implements MSG_interface {
 
   @Override
   public void send() throws IOException, PackageErrorException {
-    //TODO
     putData();
     createPackets();
     if (packets.isEmpty()) {
@@ -187,19 +181,14 @@ public class List implements MSG_interface {
           if (timeOutError > 5)
             break;
           timeOutError++;
-          // TODO controlo de fluxo
-          // vamos diminuindo o tempo de receber cenas
           socket.send(elem);
           log.addQueueSend(MSG_interface.MSGToString(elem));
           //continue;
         } catch (PackageErrorException e1) {
-          // TODO controlo de fluxo
-          // a partir de x pacotes errados, fechamos a conecao
           if (packageError > 3) break;
           packageError++;
           socket.send(elem);
           log.addQueueSend(MSG_interface.MSGToString(elem));
-          //continue;
         } catch (AckErrorException e2) {
           if (ackError > 3) break;
           ackError++;
@@ -224,8 +213,6 @@ public class List implements MSG_interface {
 
     if (packets.isEmpty()) {
       System.out.println("Nao mandei nenhum ficheiro");
-      //TODO Acrescentar cenas ou mudar
-      // mandar um bye
       return;
     }
 
@@ -248,19 +235,13 @@ public class List implements MSG_interface {
         if (timeOutError > 5)
           break;
         timeOutError++;
-        // TODO controlo de fluxo
-        // vamos diminuindo o tempo de receber cenas
         socket.send(elem);
         log.addQueueSend(MSG_interface.MSGToString(elem));
-        //continue;
       } catch (PackageErrorException e1) {
-        // TODO controlo de fluxo
-        // a partir de x pacotes errados, fechamos a conecao
         if (packageError > 3) break;
         packageError++;
         socket.send(elem);
         log.addQueueSend(MSG_interface.MSGToString(elem));
-        //continue;
       } catch (AckErrorException e2) {
         if (ackError > 3) break;
         ackError++;
@@ -271,11 +252,9 @@ public class List implements MSG_interface {
 
   @Override
   public void send(DatagramSocket socket) throws IOException, PackageErrorException {
-    //TODO
     sendFirst(socket);
     while (!(packets.isEmpty())) {
       DatagramPacket elem = packets.remove();
-      //MSG_interface.printMSG(elem);
       elem.setPort(port);
       socket.send(elem);
       log.addQueueSend(MSG_interface.MSGToString(elem));
@@ -293,14 +272,9 @@ public class List implements MSG_interface {
           if (timeOutError > 5)
             break;
           timeOutError++;
-          // TODO controlo de fluxo
-          // vamos diminuindo o tempo de receber cenas
           socket.send(elem);
           log.addQueueSend(MSG_interface.MSGToString(elem));
-          //continue;
         } catch (PackageErrorException e1) {
-          // TODO controlo de fluxo
-          // a partir de x pacotes errados, fechamos a conecao
           if (packageError > 3) break;
           packageError++;
           socket.send(elem);
@@ -316,7 +290,6 @@ public class List implements MSG_interface {
       if (ackError > 3 || packageError > 3 || timeOutError > 5) break;
     }
 
-    //TODO MUDAR
     ACK ack = new ACK(null, port, socket, clientIP, seqPedido, log);
     try {
       ack.send();
@@ -348,33 +321,29 @@ public class List implements MSG_interface {
   @Override
   public void received() throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
     // recebe o pedido
-    boolean fileReceved = false; // so passa a true no ultimo caso
-    boolean segFileReceved = false; // so passa a true no ultimo caso
+    boolean fileReceived = false; // so passa a true no ultimo caso
+    boolean segFileReceived = false; // so passa a true no ultimo caso
 
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     DatagramPacket receivedPacket = new DatagramPacket(buff, Constantes.CONFIG.BUFFER_SIZE);
     Queue<byte[]> metadata = new LinkedList<>();
     metadata.add(MSG_interface.getDataMsg(packet));
 
-    int i = 0;
-    while (!fileReceved) {
-      segFileReceved = false;
+    while (!fileReceived) {
+      segFileReceived = false;
       int erros = 0;
-      while (!segFileReceved) {
+      while (!segFileReceived) {
         try {
           socket.receive(receivedPacket);
-          i++;
-          segFileReceved = validType(receivedPacket);
-          if (segFileReceved) {
-            //System.out.print("RECEBI: ");
-            //MSG_interface.printMSG(receivedPacket);
+          segFileReceived = validType(receivedPacket);
+          if (segFileReceived) {
             log.addQueueReceived(MSG_interface.MSGToString(receivedPacket));
             ACK ack = new ACK(receivedPacket, port, socket, clientIP, controlSeqPedido.getSeq(), log);
             ack.send();
             byte[] data = MSG_interface.getDataMsg(receivedPacket);
             metadata.add(data);
           } else {
-            fileReceved = true;
+            fileReceived = true;
             break;
           }
         } catch (SocketTimeoutException e) {
@@ -392,27 +361,15 @@ public class List implements MSG_interface {
 
     HashMap<String, FileStruct> hf = createFileMap(sb.toString());
     ArrayList<String> filesToReceive = dir.compareDirectories(hf);
-    //if (filesToReceive != null)
-    //  System.out.println("files to receive: " + filesToReceive);
     var portPrincipal = Constantes.CONFIG.PORT_UDP;
     LinkedList<Thread> threads = new LinkedList<>();
     if (filesToReceive != null)
       for (var elem : filesToReceive) {
-        //if (elem.equals(Constantes.PATHS.LOG_NAME_FILE) ||
-        //    elem.equals(Constantes.PATHS.LOG_Time_NAME_FILE) ||
-        //    elem.equals(Constantes.PATHS.LOG_Received_NAME_FILE) ||
-        //    elem.equals(Constantes.PATHS.LOGINS)
-        //)
-        if (log.status.equalFileToIgnored(elem))
+        if (log.status.equalFileToIgnore(elem))
           continue;
         FileStruct file = new FileStruct(new File(elem));
         MSG_interface msgFile;
-        //if(file.isDirectory()) {
-        //  msgFile = new List(port, clientIP, socket, controlSeqPedido, file.getName(), log);
-        //} else {
           msgFile = new GET(clientIP, portPrincipal, socket, controlSeqPedido, file, path, log);
-        //}
-        //GET getMsg = new GET(clientIP, portPrincipal, socket, controlSeqPedido, file, path, log);
         ControlMsgWithChangePorts msg = new ControlMsgWithChangePorts(controlSeqPedido, msgFile, clientIP,
             portPrincipal, log);
         SendMSWithChangePorts t = new SendMSWithChangePorts(msg, log.status);

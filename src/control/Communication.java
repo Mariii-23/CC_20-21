@@ -16,7 +16,7 @@ import java.net.UnknownHostException;
 
 public class Communication implements Runnable {
 
-  private final Information status; // server para verificar se o programa termina
+  private final Information status;
   private final Log log;
   private DatagramSocket socket;
 
@@ -25,7 +25,6 @@ public class Communication implements Runnable {
   private final InetAddress clientIP;
 
   private SeqPedido seqPedido;
-  //private seqPed
 
   public Communication(Information status, String clientIP, String pathDir, Log log) throws UnknownHostException {
     this.status = status;
@@ -56,23 +55,21 @@ public class Communication implements Runnable {
 
   private void confirmarConecao() throws IOException, AutenticationFailed {
     seqPedido = new SeqPedido((byte) 10);
-    System.out.println("servidor");
+    System.out.println("Listening...");
     HI HiMSG = new HI(clientIP, port, socket, seqPedido, log);
     HiMSG.received();
   }
 
   private void iniciarConecao() throws IOException, AutenticationFailed {
     socket = new DatagramSocket(port);
-
-    // TODO ver melhor o tempo
     socket.setSoTimeout(200);
 
     HI hiMsg = new HI(clientIP, port, socket, seqPedido, log);
     try {
       hiMsg.send();
     } catch (PackageErrorException e) {
-      //a conecao falhou porque ele recebeu um pacote errado muitas vezes
-      System.out.println("A coneção falhou");
+      // a conecao falhou porque ele recebeu um pacote errado muitas vezes
+      System.out.println("A conexão falhou");
       e.printStackTrace();
     }
   }
@@ -88,12 +85,12 @@ public class Communication implements Runnable {
       return;
     }
 
-    ReceveidAndTreat receveidAndTreat = new ReceveidAndTreat(status, socket, pathDir, clientIP, seqPedido, log);
+    ReceivedAndTreat receivedAndTreat = new ReceivedAndTreat(status, socket, pathDir, clientIP, seqPedido, log);
     SynchronizeDirectory synchronizeDirectory =
         new SynchronizeDirectory(status, socket, pathDir, clientIP, port, seqPedido, log);
     RunMenu menu = new RunMenu(status, port, clientIP, log, seqPedido);
     Thread[] threads = new Thread[4];
-    threads[0] = new Thread(receveidAndTreat);
+    threads[0] = new Thread(receivedAndTreat);
     threads[1] = new Thread(synchronizeDirectory);
     threads[2] = new Thread(log);
     threads[3] = new Thread(menu);
@@ -110,9 +107,6 @@ public class Communication implements Runnable {
         thread.join();
         status.decreaseThread();
       }
-      //threads[0].join();
-      //threads[1].join();
-      //threads[2].join();
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

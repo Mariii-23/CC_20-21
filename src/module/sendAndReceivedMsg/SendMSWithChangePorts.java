@@ -1,6 +1,5 @@
 package module.sendAndReceivedMsg;
 
-import module.sendAndReceivedMsg.ControlMsgWithChangePorts;
 import module.status.Information;
 
 import java.io.IOException;

@@ -85,7 +85,7 @@ public interface MSG_interface {
 
   void createTailPacket(byte[] buff);
 
-  default public byte[] createMsg(byte seq, byte seqSeg) {
+  default byte[] createMsg(byte seq, byte seqSeg) {
     byte[] buff = new byte[Constantes.CONFIG.BUFFER_SIZE];
     createHeadPacket(seq, seqSeg, buff);
     createTailPacket(buff);
@@ -102,7 +102,6 @@ public interface MSG_interface {
                                  Information information, Log log)
       throws IOException, TimeOutMsgException, PackageErrorException, AckErrorException {
     MSG_interface msg_interface;
-    //TODO
     InetAddress clientIp = packet.getAddress();
     int port = socket.getLocalPort();
     switch (getType(packet)) {

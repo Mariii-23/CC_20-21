@@ -16,7 +16,7 @@ public class Login {
     this.combination = new HashMap<>();
   }
 
-  public void readAutenticationFile() {
+  public void readAuthenticationFile() {
     try {
       File file = new File(fileName);
       FileReader fr = new FileReader(file);
@@ -26,14 +26,14 @@ public class Login {
         var temparr = line.split(";", 2);
         combination.put(temparr[0], temparr[1]);
       }
-      fr.close();    //closes the stream and release the resources
+      fr.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
-  public boolean validate(String givenKey, String recievedValue) {
-    return combination.get(givenKey).equals(recievedValue);
+  public boolean validate(String givenKey, String receivedValue) {
+    return combination.get(givenKey).equals(receivedValue);
   }
 
   public String autenticate(String key) {

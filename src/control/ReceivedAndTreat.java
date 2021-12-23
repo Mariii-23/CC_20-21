@@ -17,19 +17,18 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.LinkedList;
 
-public class ReceveidAndTreat implements Runnable {
+public class ReceivedAndTreat implements Runnable {
 
   private final Information status;
   private final Log log;
   private final DatagramSocket socket;
-  //private ReentrantLock lock;
 
   private final String pathDir;
   private final InetAddress clientIP;
 
   private final SeqPedido seqPedido;
 
-  public ReceveidAndTreat(Information status, DatagramSocket socket, String pathDir, InetAddress clientIP,
+  public ReceivedAndTreat(Information status, DatagramSocket socket, String pathDir, InetAddress clientIP,
                           SeqPedido seqPedido, Log log) {
     this.status = status;
     this.log = log;
@@ -58,7 +57,6 @@ public class ReceveidAndTreat implements Runnable {
         byte[] dados = receivedPacket.getData().clone();
         DatagramPacket p = new DatagramPacket(dados, dados.length, receivedPacket.getAddress(), receivedPacket.getPort());
         var msg = new ControlMsgWithChangePorts(seqPedido, clientIP, pathDir, p, status, log);
-        //System.out.println("EU sei q recebi isto algo no principal");
         SendMSWithChangePorts t = new SendMSWithChangePorts(msg,status);
 
         var n = new Thread(t);
@@ -69,7 +67,6 @@ public class ReceveidAndTreat implements Runnable {
       for (var t : threads) {
         t.join();
       }
-
     } catch (TimeOutMsgException | AckErrorException | PackageErrorException | IOException | InterruptedException e) {
       e.printStackTrace();
     }

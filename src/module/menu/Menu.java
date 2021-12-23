@@ -46,10 +46,10 @@ public class Menu<T> {
     int op;
     var is = new Scanner(System.in);
 
-    System.out.println(ANSI_BOLD + "Option: " + ANSI_RESET);
+    System.out.println(ANSI_BOLD + ANSI_CYAN + "Option: " + ANSI_RESET);
     try {
       op = is.nextInt();
-    } catch (InputMismatchException e) { // Não foi inscrito um int
+    } catch (InputMismatchException e) { // Não foi escrito um int
       op = -1;
     }
     if (op < 0 || op > this.options.size()) {
@@ -94,9 +94,9 @@ public class Menu<T> {
     var s = new StringBuilder();
     int i = 0;
     s.append("\n");
-    s.append(ANSI_BOLD).append("MENU").append(ANSI_RESET).append("\n");
+    s.append(ANSI_BOLD + ANSI_CYAN).append("MENU").append(ANSI_RESET).append("\n");
     for (Option o : this.options) {
-      s.append("\t").append(ANSI_BOLD).append(i).append(": ").append(ANSI_RESET);
+      s.append("\t").append(ANSI_BOLD + ANSI_CYAN).append(i).append(": ").append(ANSI_RESET);
       s.append(o.getCommand());
       s.append("\n");
       i++;

@@ -5,6 +5,8 @@ import module.status.Information;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.StringTokenizer;
@@ -27,9 +29,19 @@ public class HttpHandler implements Runnable {
     this.information = information;
   }
 
-  // passar para string um dado ficheiro
+  /**
+   * Le e passa um dado ficheiro para string
+   * @param fileName nome do ficheiro
+   * @return String
+   * @throws FileNotFoundException
+   */
   private String readFile(String fileName) throws FileNotFoundException {
-    File file = new File(Constantes.PATHS.PARENT_PATH, fileName);
+    File file ;
+      if (Files.exists(Path.of(Constantes.PATHS.PARENT_PATH + "/" + fileName)))
+        file = new File(Constantes.PATHS.PARENT_PATH, fileName);
+      else
+        file = new File(Constantes.PATHS.PARENT_PATH2, fileName);
+
     StringBuilder s = new StringBuilder();
     Scanner scanner = new Scanner(file);
     while (scanner.hasNextLine())
@@ -37,9 +49,15 @@ public class HttpHandler implements Runnable {
     return s.toString();
   }
 
-  /// Pedidos SEND
+  /** Pedidos SEND */
 
-  // Responder ao pedido do status SEND /
+  // Responder ao pedido do status SEND e GET /
+
+  /**
+   * Handler do pedido get and send
+   * @param isLog Boolean que serve para determinar que html deverá ser entregue
+   * @throws IOException Lança exceção caso algo falhe
+   */
   private void handleStatus(Boolean isLog) throws IOException {
     String string = new Create_html_file(pathDir, information).createHtml(isLog);
     out.println("HTTP/1.1 200 OK");
@@ -53,8 +71,11 @@ public class HttpHandler implements Runnable {
     out.flush();
   }
 
-  // Respoonder ao ficheiro de pagina not found
-  private void handlePageNotFound() throws IOException {
+  /**
+   * Handler que responde a um pedido de PAG NOT FOUND
+   * @throws IOException Lança exceção caso algo falhe
+   */
+  private void handlePageNotFound() throws FileNotFoundException {
     var string = readFile(Constantes.PATHS.PAGE_NOT_FOUND_HTML);
     out.println("HTTP/1.1 404 File Not Found");
     out.println("Server: " + Constantes.CONFIG.SERVER_NAME);
@@ -66,10 +87,13 @@ public class HttpHandler implements Runnable {
     out.flush();
   }
 
-  /// PEDIDOS Nao suportados
+  /** PEDIDOS Nao suportados */
 
-  // Responder ao pedido nao suportado
-  private void handleNotSupported() throws IOException {
+  /**
+   * Handler que responde a um pedido não suportado
+   * @throws FileNotFoundException Lança exceção caso algo falhe
+   */
+  private void handleNotSupported() throws FileNotFoundException {
     var string = readFile(Constantes.PATHS.NOT_SUPPORTED);
     out.println("HTTP/1.1 501 Not Implemented");
     out.println("Server: ");
@@ -81,9 +105,13 @@ public class HttpHandler implements Runnable {
     out.flush();
   }
 
-  /// HANDLERSSS
+  //* HANDLERS /
 
-  // Handler do pedido do get
+  /**
+   * Handler do pedido get
+   * @param fileRequest
+   * @throws IOException
+   */
   private void handleGet(String fileRequest) throws IOException {
     switch (fileRequest) {
       case "/":
@@ -97,7 +125,12 @@ public class HttpHandler implements Runnable {
     }
   }
 
-  // Handler dos pedidos
+  /**
+   *  Handler dos pedidos
+   * @param method
+   * @param fileRequest
+   * @throws IOException
+   */
   private void handleResponse(String method, String fileRequest) throws IOException {
     switch (method) {
       case "SEND":
@@ -133,11 +166,4 @@ public class HttpHandler implements Runnable {
       l.unlock();
     }
   }
-
-  //@Override
-  //public void close() throws Exception {
-  //  out.close();
-  //  in.close();
-  //  s.close();
-  //}
 }

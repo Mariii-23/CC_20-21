@@ -21,7 +21,7 @@ public class Information {
 
   public final HashSet<String> logFiles = new HashSet<>(Arrays.asList(
       LOGINS,LOG_NAME_FILE, LOG_Received_NAME_FILE, LOG_Time_NAME_FILE));
-  private final Set<String> filesToIgnored;
+  private final Set<String> filesToIgnore;
   private final ReentrantLock lFiles;
 
   private boolean startMenu;
@@ -42,10 +42,10 @@ public class Information {
     this.l = new ReentrantLock();
     this.terminated = false;
     this.login = new Login(pathDir + '/' + LOGINS);
-    login.readAutenticationFile();
-    this.filesToIgnored = new HashSet<>();
+    login.readAuthenticationFile();
+    this.filesToIgnore = new HashSet<>();
     this.lFiles = new ReentrantLock();
-    initFilesToIgnored();
+    initFilesToIgnore();
 
     this.startMenu = false;
     this.lStartMenu = new ReentrantLock();
@@ -61,23 +61,6 @@ public class Information {
     this.lNumberGetFiles = new ReentrantLock();
   }
 
-  public int numberTotalThreads() {
-    try {
-      this.lNumberThreads.lock();
-      return this.numberTotalThreads;
-    } finally {
-      this.lNumberThreads.unlock();
-    }
-  }
-
-  public int numberThreads() {
-    try {
-      this.lNumberThreads.lock();
-      return this.numberThreads;
-    } finally {
-      this.lNumberThreads.unlock();
-    }
-  }
 
   public void increaseThread() {
     try {
@@ -135,22 +118,22 @@ public class Information {
     }
   }
 
-  private void initFilesToIgnored() {
+  private void initFilesToIgnore() {
     try {
       lFiles.lock();
-      this.filesToIgnored.add(Constantes.PATHS.LOG_NAME_FILE);
-      this.filesToIgnored.add(LOGINS);
-      this.filesToIgnored.add(Constantes.PATHS.LOG_Received_NAME_FILE);
-      this.filesToIgnored.add(Constantes.PATHS.LOG_Time_NAME_FILE);
+      this.filesToIgnore.add(Constantes.PATHS.LOG_NAME_FILE);
+      this.filesToIgnore.add(LOGINS);
+      this.filesToIgnore.add(Constantes.PATHS.LOG_Received_NAME_FILE);
+      this.filesToIgnore.add(Constantes.PATHS.LOG_Time_NAME_FILE);
     } finally {
       lFiles.unlock();
     }
   }
 
-  public Boolean equalFileToIgnored(String filename) {
+  public Boolean equalFileToIgnore(String filename) {
     try {
       lFiles.lock();
-      return this.filesToIgnored.contains(filename);
+      return this.filesToIgnore.contains(filename);
     } finally {
       lFiles.unlock();
     }
@@ -159,7 +142,7 @@ public class Information {
   public void addFileToIgnored(String filename) {
     try {
       lFiles.lock();
-      this.filesToIgnored.add(filename);
+      this.filesToIgnore.add(filename);
     } finally {
       lFiles.unlock();
     }
@@ -168,19 +151,19 @@ public class Information {
   public void addFileToSynchronize(String filename) {
     try {
       lFiles.lock();
-      this.filesToIgnored.remove(filename);
+      this.filesToIgnore.remove(filename);
     } finally {
       lFiles.unlock();
     }
   }
 
   public String filesToIgnoredToString() {
-    var s = new StringBuilder(ANSI_BG_BLUE + "Files to ignored\n" + ANSI_RESET);
+    var s = new StringBuilder(ANSI_BOLD + ANSI_CYAN + "Files ignored\n" + ANSI_RESET);
     try {
       int i = 1;
       lFiles.lock();
-      for(var elem : filesToIgnored){
-        s.append( ANSI_BG_BLUE + i + " -> " + ANSI_RESET ); i++;
+      for(var elem : filesToIgnore){
+        s.append(ANSI_CYAN).append(i).append(" -> ").append(ANSI_RESET); i++;
         s.append(elem).append("\n");
       }
     } finally {
@@ -237,8 +220,8 @@ public class Information {
     return login.generateKey();
   }
 
-  public boolean validate(String givenKey, String recievedValue) {
-    return login.validate(givenKey, recievedValue);
+  public boolean validate(String givenKey, String receivedValue) {
+    return login.validate(givenKey, receivedValue);
   }
 
   public String getValue(String key) {

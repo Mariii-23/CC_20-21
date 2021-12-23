@@ -1,0 +1,23 @@
+A maioria dos; utilizadores usa no
+dia a dia um; ou mais serviços
+de armazenamento; remoto na nuvem
+Quer por razões; de segurança
+(cópia de segurança); quer por facilidade
+em ter os seus; ficheiros disponíveis
+em mais que; um computador,
+devidamente sincronizados; e atualizados.
+Quando se; trabalha em equipa
+a necessidade de; usar pastas
+partilhadas é; também grande,
+sendo um dos; serviços mais
+básicos e; indispensáveis nos projetos
+e no trabalho; em equipa.
+Embora existam; já muitas e
+boas soluções; este é o nosso
+pretexto para; desenvolvermos um novo
+serviço de; sincronização de pastas
+espontâneo e; ultrarápido, que se
+baseie quase; exclusivamente em
+protocolos de; transporte não
+orientado à; conexão, como por
+exemplo; o UDP.

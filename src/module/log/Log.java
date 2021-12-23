@@ -172,7 +172,12 @@ public class Log implements Runnable, Closeable {
       l.lock();
       fileLog.flush();
       fileLog.close();
-      //todo fechar o resto
+
+      fileLogReceived.flush();
+      fileLogReceived.close();
+
+      fileLogTime.flush();
+      fileLogTime.close();
     } finally {
       l.unlock();
     }

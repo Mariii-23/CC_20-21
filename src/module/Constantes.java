@@ -1,10 +1,4 @@
 package module;
-
-import module.log.Log;
-
-import java.util.Arrays;
-import java.util.HashSet;
-
 /**
  * Aqui serão guardadas todas as constantes por Módulos.
  */
@@ -16,8 +10,8 @@ public class Constantes {
     /**
      * Default path para o template HTML
      */
-    //public static String PARENT_PATH = "files";
     public static String PARENT_PATH = "../files";
+    public static String PARENT_PATH2 = "files";
 
     public static String TEMPLATE_HTML = "template.html";
     public static String PAGE_NOT_FOUND_HTML = "page_not_found.html";
@@ -48,14 +42,14 @@ public class Constantes {
     /**
      * Port default
      */
-    public static int PORT_UDP = 3000;
-    public static int PORT_HTTP = 8080;
+    public static int PORT_UDP = 80;
+    public static int PORT_HTTP = 80;
 
     public static String SERVER_NAME = "Grupo 6";
   }
 
   public static class PHRASES {
-    public static String INSTRUCTIONS = "Corra o programa, fornecendo 2 arguemntos válidso\n" +
+    public static String INSTRUCTIONS = "Corra o programa, fornecendo 2 arguemntos válidos\n" +
         "1º arg -> [IP do servidor a conectar]\n" +
         "2º arg -> [Caminho Completo da pasta a ser sincronizada\n" +
         "Exemplo: 10.3.3.2" + "\\" + "home" + "\\" + "core" + "\\" + "folder\n";

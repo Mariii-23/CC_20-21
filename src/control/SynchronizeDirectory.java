@@ -14,15 +14,12 @@ public class SynchronizeDirectory implements Runnable {
   private final Information status;
   private final Log log;
   private final DatagramSocket socket;
-  //private ReentrantLock lock;
 
   private final String pathDir;
   private final InetAddress clientIP;
   private final int port;
 
   private final SeqPedido seqPedido;
-
-  private final int time = 3000;
 
   public SynchronizeDirectory(Information status, DatagramSocket socket, String pathDir, InetAddress clientIP,
                               int port, SeqPedido seqPedido, Log log) {
@@ -47,7 +44,7 @@ public class SynchronizeDirectory implements Runnable {
 
   @Override
   public void run() {
-    //System.out.println("Send first list");
+    int time = 3000;
     sendList();
     System.out.println("Pasta sincronizada deste lado");
     status.setStartMenuOn();

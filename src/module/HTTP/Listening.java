@@ -1,7 +1,6 @@
 package module.HTTP;
 
 import module.Constantes;
-import module.exceptions.TimeOutMsgException;
 import module.status.Information;
 
 import java.io.IOException;
@@ -29,8 +28,6 @@ public class Listening implements Runnable {
       ReentrantLock lock = new ReentrantLock();
       serverSocket.setSoTimeout(1000);
       while (!status.isTerminated()) {
-        // TODO maybe por tempo assim quando terminamos o programa ele
-        // nao fica a espera de 1 ultima concecao
         Socket client;
         try {
           client = serverSocket.accept();
@@ -50,11 +47,9 @@ public class Listening implements Runnable {
           //  System.out.println(line);
           //  line = in_.readLine();
           //}
-          Thread t = new Thread(new HttpHandler(client, pathDir, lock, status));
-          t.run();
-          t.join();
-        } catch (InterruptedException e) {
-          System.out.println(e.toString());
+          var handler = new HttpHandler(client, pathDir, lock, status);
+          handler.run();
+        } catch (Exception ignored) {
         }
       }
       serverSocket.close();

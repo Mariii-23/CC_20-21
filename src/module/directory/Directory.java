@@ -8,13 +8,6 @@ import java.util.Objects;
 public class Directory {
   private final HashMap<String, FileStruct> files;
 
-  //public Directory(File dir) {
-  //  files = new HashMap<>();
-
-  //  for (File file : Objects.requireNonNull(dir.listFiles()))
-  //    files.put(file.getName(), new FileStruct(file));
-  //}
-
   private void addDirectory(File file , String path) {
     String actualPath;
     if (path == null || path.isEmpty())
