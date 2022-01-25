@@ -1,0 +1,4 @@
+
+* Trabalho Prático Nº 2 - FolderFastSync: Sincronização rápido de pastas em ambientes serveless
+
++ Realizado no âmbito da Unidade Curricular de Comunicação por Computadores
